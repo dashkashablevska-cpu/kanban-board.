@@ -7,11 +7,43 @@
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <!-- Шапка з назвою застосунку -->
+    <header>
+      <h1>Kanban-дошка справ</h1>
+    </header>
 
-    <!-- Основний вміст: три колонки дошки (To Do / In Progress / Done) -->
+    <main>
+      <section id="todo">
+        <h2>To Do</h2>
+        <article>
+          <h3>Підготувати звіт</h3>
+          <p>Зібрати дані та оформити звіт за минулий тиждень.</p>
+        </article>
+        <article>
+          <h3>Написати листа клієнту</h3>
+          <p>Узгодити терміни виконання проєкту.</p>
+        </article>
+      </section>
 
-    <!-- Підвал -->
+      <section id="in-progress">
+        <h2>In Progress</h2>
+        <article>
+          <h3>Розробка макета сторінки</h3>
+          <p>Верстка головної сторінки застосунку.</p>
+        </article>
+      </section>
+
+      <section id="done">
+        <h2>Done</h2>
+        <article>
+          <h3>Налаштування репозиторію</h3>
+          <p>Створено проєкт і підключено Git.</p>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      <p>Kanban-дошка справ. Дані надані навчальним прикладом. &copy; 2026</p>
+    </footer>
 
     <script src="js/app.js"></script>
   </body>

@@ -32,20 +32,40 @@ header h1 {
   margin: 0;
 }
 
-/* Крок 5. main і section-колонки */
+/* Крок 5. main і section-колонки (мобільний: базові стилі без @media) */
 main {
   max-width: 1100px;
   margin: 0 auto;
   padding: 1.5rem 1rem;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr; /* мобільний: колонки одна під одною */
   gap: 1rem;
 }
 
 main > section {
-  flex: 1; /* три колонки однакової ширини */
   background-color: #eceef1; /* трохи темніший за білі картки */
   padding: 12px;
   border-radius: 8px;
+}
+
+/* Планшет: три колонки в рядок, з прокруткою, якщо не вміщуються */
+@media (min-width: 600px) {
+  main {
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    overflow-x: auto;
+  }
+}
+
+/* Десктоп: фіксована мінімальна ширина колонок і більший gap */
+@media (min-width: 1024px) {
+  main {
+    grid-template-columns: repeat(3, minmax(260px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .card {
+    margin-bottom: 16px; /* більший gap між картками завдань усередині колонки */
+  }
 }
 
 main > section h2 {
@@ -80,7 +100,13 @@ main > section h2 {
   color: #444444;
 }
 
-/* Крок 7. Footer (aside у цьому варіанті не передбачено) */
+/* Крок 7. Обмеження ширини зображень */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Крок 7 (продовження). Footer (aside у цьому варіанті не передбачено) */
 footer {
   padding: 1rem;
   text-align: center;

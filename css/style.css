@@ -1,3 +1,4 @@
+/* Крок 2. Базовий reset */
 *,
 *::before,
 *::after {
@@ -8,14 +9,16 @@ body {
   margin: 0;
 }
 
+/* Крок 3. Базова типографіка (палітра: нейтральна продуктивна) */
 body {
   font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
   font-size: 1rem;
   line-height: 1.5;
   color: #222222;
-  background-color: #d9dadd;
+  background-color: #d9dadd; /* сірий фон дошки */
 }
 
+/* Крок 4. Header */
 header {
   background-color: #4b5563;
   padding: 1.25rem 1rem;
@@ -29,6 +32,7 @@ header h1 {
   margin: 0;
 }
 
+/* Крок 5. main і section-колонки */
 main {
   max-width: 1100px;
   margin: 0 auto;
@@ -38,8 +42,8 @@ main {
 }
 
 main > section {
-  flex: 1;
-  background-color: #eceef1;
+  flex: 1; /* три колонки однакової ширини */
+  background-color: #eceef1; /* трохи темніший за білі картки */
   padding: 12px;
   border-radius: 8px;
 }
@@ -51,7 +55,8 @@ main > section h2 {
   color: #374151;
 }
 
-article {
+/* Крок 6. Картки (клас .card) */
+.card {
   background-color: #ffffff;
   padding: 10px;
   margin-bottom: 8px;
@@ -59,22 +64,23 @@ article {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
-article:last-child {
+.card:last-child {
   margin-bottom: 0;
 }
 
-article h3 {
+.card h3 {
   margin-top: 0;
   margin-bottom: 0.35rem;
   font-size: 1rem;
 }
 
-article p {
+.card p {
   margin: 0;
   font-size: 0.9rem;
   color: #444444;
 }
 
+/* Крок 7. Footer (aside у цьому варіанті не передбачено) */
 footer {
   padding: 1rem;
   text-align: center;

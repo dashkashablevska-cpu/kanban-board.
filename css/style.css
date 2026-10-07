@@ -1,3 +1,30 @@
+/* ==========================================================
+   Особиста Kanban-дошка справ
+   Чітка вимога: заголовки колонок мають різні кольори,
+   контраст білого тексту до фону ≥ 4.5:1.
+   ========================================================== */
+
+:root {
+  /* Кольори колонок (білий текст на них: контраст приблизно) */
+  --todo: #1f3864; /* ≈ 11.6:1 */
+  --progress: #8a4b00; /* ≈ 6.8:1  */
+  --done: #1b5e3b; /* ≈ 7.7:1  */
+
+  /* Нейтральні кольори */
+  --page: #e9edf2; /* тло сторінки */
+  --column: #f6f8fa; /* тло колонки */
+  --surface: #ffffff; /* тло картки */
+  --line: #c9d1da; /* рамки */
+  --ink: #17212b; /* основний текст, ≈ 15:1 на білому */
+  --ink-soft: #4a5663; /* другорядний текст, ≈ 7.5:1 на білому */
+
+  /* Єдиний ритм відступів */
+  --gap: 12px;
+
+  --font:
+    "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+}
+
 *,
 *::before,
 *::after {
@@ -6,101 +33,176 @@
 
 body {
   margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
 }
 
-body {
-  font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
-  font-size: 1rem;
-  line-height: 1.5;
-  color: #222222;
-  background-color: #d9dadd; /* сірий фон дошки */
-}
+/* ---------- Шапка ---------- */
 
 header {
-  background-color: #4b5563;
-  padding: 1.25rem 1rem;
-  border-bottom: 3px solid #374151;
-  text-align: center;
+  background: var(--ink);
+  color: #ffffff; /* ≈ 15:1 */
+  padding: 20px 16px;
 }
 
 header h1 {
-  font-size: 1.75rem;
-  color: #ffffff;
-  margin: 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
+
+/* ---------- Дошка ---------- */
 
 main {
-  max-width: 1100px;
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 1.5rem 1rem;
+  padding: 16px;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
+  grid-template-columns: 1fr; /* мобільний: колонки одна під одною */
+  gap: 16px;
+  align-items: start;
 }
 
+/* Колонка */
 main > section {
-  background-color: #eceef1;
-  padding: 12px;
+  --accent: var(--todo);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap); /* однаковий відступ між усіма картками */
+  padding: 0 var(--gap) var(--gap);
+  background: var(--column);
+  border: 1px solid var(--line);
   border-radius: 8px;
+  overflow: hidden;
 }
 
-@media (min-width: 600px) {
-  main {
-    grid-template-columns: repeat(3, 1fr);
-    overflow-x: auto;
-  }
+#todo {
+  --accent: var(--todo);
+}
+#in-progress {
+  --accent: var(--progress);
+}
+#done {
+  --accent: var(--done);
 }
 
-@media (min-width: 1024px) {
-  main {
-    grid-template-columns: repeat(3, minmax(260px, 1fr));
-    gap: 1.5rem;
-  }
-
-  .card {
-    margin-bottom: 16px;
-  }
+/* Заголовок колонки: кольорова смуга на всю ширину */
+main > section > h2 {
+  margin: 0 calc(var(--gap) * -1);
+  padding: 10px var(--gap);
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
 }
 
-main > section h2 {
-  margin-top: 0;
-  margin-bottom: 0.75rem;
-  font-size: 1.1rem;
-  color: #374151;
-}
+/* ---------- Картка ---------- */
 
 .card {
-  background-color: #ffffff;
-  padding: 10px;
-  margin-bottom: 8px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent); /* колір статусу на картці */
   border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-}
-
-.card:last-child {
-  margin-bottom: 0;
+  box-shadow:
+    0 1px 2px rgba(23, 33, 43, 0.12),
+    0 2px 6px rgba(23, 33, 43, 0.06);
 }
 
 .card h3 {
-  margin-top: 0;
-  margin-bottom: 0.35rem;
-  font-size: 1rem;
+  margin: 0 0 4px;
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .card p {
   margin: 0;
-  font-size: 0.9rem;
-  color: #444444;
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.4;
+  color: var(--ink-soft);
 }
 
-img {
-  max-width: 100%;
-  height: auto;
+/* Виконані задачі трохи приглушені, але текст залишається читабельним */
+#done .card h3 {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--ink-soft);
 }
+
+.card:focus-visible,
+.card:focus-within {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Футер ---------- */
 
 footer {
-  padding: 1rem;
+  padding: 16px;
   text-align: center;
-  font-size: 0.85rem;
-  color: #6b7280;
+  background: #dde3ea;
+  border-top: 1px solid var(--line);
 }
+
+footer p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft); /* ≈ 6.2:1 на #dde3ea */
+}
+
+/* ==========================================================
+   Адаптивність (підлаштуйте значення під breakpoint'и
+   з практикуму 4, якщо вони інші)
+   ========================================================== */
+
+/* Планшет */
+@media (min-width: 768px) {
+  header {
+    padding: 24px 24px;
+  }
+  header h1 {
+    font-size: 1.75rem;
+  }
+
+  main {
+    padding: 24px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+/* Десктоп */
+@media (min-width: 1200px) {
+  main {
+    padding: 32px 24px;
+    gap: 24px;
+  }
+}
+
+/* ==========================================================
+   ОБҐРУНТУВАННЯ НЕЧІТКОЇ ВИМОГИ
+   «Дошка має виглядати організованою, а не захаращеною».
+   Усі відступи між картками й колонками задані змінною --gap,
+   тому ритм дошки рівний, і око сприймає її як упорядковану
+   сітку. Типографіка карток компактна (15px/600 для заголовка,
+   14px/1.4 для опису): так на екрані вміщується більше задач,
+   а різниця у вазі й кольорі тексту відділяє заголовок від
+   опису без збільшення розміру. Картку від колонки відокремлює
+   тонка рамка з легкою тінню, а лівий кольоровий край повторює
+   колір заголовка колонки, тому статус задачі читається без
+   додаткових підписів.
+   ========================================================== */

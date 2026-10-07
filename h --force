@@ -1,0 +1,54 @@
+[33mcommit 8ca1ffb63490ba6c8886cbcf54b280ccd315960d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Dasha <shchablevska.daria_ip54@edu.kpi.ua>
+Date:   Wed Sep 30 19:31:57 2026 +0300
+
+    Add responsive layout: CSS Grid for board columns with mobile/tablet/desktop breakpoints
+
+[33mcommit 138125376485971694decc507676f524af4fff18[m
+Author: Dasha <shchablevska.daria_ip54@edu.kpi.ua>
+Date:   Wed Sep 30 19:17:38 2026 +0300
+
+    css done
+
+[33mcommit 32187e1d2dc101c9c79e2d3cea6671f49a34fcbb[m
+Author: Dasha <shchablevska.daria_ip54@edu.kpi.ua>
+Date:   Wed Sep 30 19:10:48 2026 +0300
+
+    css done
+
+[33mcommit 0e91a5f7a4a1128e851c4e6a3ad28f251ca171f9[m
+Author: Dasha <shchablevska.daria_ip54@edu.kpi.ua>
+Date:   Wed Sep 30 18:50:17 2026 +0300
+
+    All done
+
+[33mcommit 85f87f143df606f8a45f9fd3081e4c3e6c0068e2[m
+Author: Dasha <shchablevska.daria_ip54@edu.kpi.ua>
+Date:   Tue Sep 22 19:56:26 2026 +0300
+
+    Add all correct
+
+[33mcommit 468bd616b4706f39ea8dfc9f2ca9be1b5a8e7c30[m
+Author: Dasha <shchablevska.daria_ip54@edu.kpi.ua>
+Date:   Wed Sep 16 18:27:40 2026 +0300
+
+    Додано семантичну розмітку HTML5 для Kanban-дошки: header, main з section/article, footer
+
+[33mcommit c5f42148437914de7ce69a56c11afe758acf4a32[m
+Merge: 417c297 55c77a6
+Author: Dasha <shchablevska.daria_ip54@edu.kpi.ua>
+Date:   Fri Sep 4 21:25:34 2026 +0300
+
+    Merge remote changes
+
+[33mcommit 55c77a64c47677f50b08f827bc9c0fa765923c2b[m
+Author: Daria Shchablevska <dashkashablevska@gmail.com>
+Date:   Fri Sep 4 21:07:52 2026 +0300
+
+    Initial commit
+
+[33mcommit 417c2976edfda92319abe2e3e32e4865ade11c3b[m
+Author: Dasha <shchablevska.daria_ip54@edu.kpi.ua>
+Date:   Fri Sep 4 21:03:09 2026 +0300
+
+    Практикум 1: базовий каркас проєкту kanban-board

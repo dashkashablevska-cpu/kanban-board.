@@ -1,24 +1,15 @@
-/* ==========================================================
-   Особиста Kanban-дошка справ
-   Чітка вимога: заголовки колонок мають різні кольори,
-   контраст білого тексту до фону ≥ 4.5:1.
-   ========================================================== */
-
 :root {
-  /* Кольори колонок (білий текст на них: контраст приблизно) */
-  --todo: #1f3864; /* ≈ 11.6:1 */
-  --progress: #8a4b00; /* ≈ 6.8:1  */
-  --done: #1b5e3b; /* ≈ 7.7:1  */
+  --todo: #1f3864;
+  --progress: #8a4b00;
+  --done: #1b5e3b;
 
-  /* Нейтральні кольори */
-  --page: #e9edf2; /* тло сторінки */
-  --column: #f6f8fa; /* тло колонки */
-  --surface: #ffffff; /* тло картки */
-  --line: #c9d1da; /* рамки */
-  --ink: #17212b; /* основний текст, ≈ 15:1 на білому */
-  --ink-soft: #4a5663; /* другорядний текст, ≈ 7.5:1 на білому */
+  --page: #e9edf2;
+  --column: #f6f8fa;
+  --surface: #ffffff;
+  --line: #c9d1da;
+  --ink: #17212b;
+  --ink-soft: #4a5663;
 
-  /* Єдиний ритм відступів */
   --gap: 12px;
 
   --font:
@@ -47,7 +38,7 @@ body {
 
 header {
   background: var(--ink);
-  color: #ffffff; /* ≈ 15:1 */
+  color: #ffffff;
   padding: 20px 16px;
 }
 
@@ -57,10 +48,9 @@ header h1 {
   font-size: 1.5rem;
   font-weight: 700;
   line-height: 1.2;
-  letter-spacing: -0.01em;
 }
 
-/* ---------- Дошка ---------- */
+/* ---------- Основна дошка ---------- */
 
 main {
   flex: 1;
@@ -69,17 +59,18 @@ main {
   margin: 0 auto;
   padding: 16px;
   display: grid;
-  grid-template-columns: 1fr; /* мобільний: колонки одна під одною */
+  grid-template-columns: 1fr;
   gap: 16px;
   align-items: start;
 }
 
-/* Колонка */
+/* ---------- Колонки ---------- */
+
 main > section {
   --accent: var(--todo);
   display: flex;
   flex-direction: column;
-  gap: var(--gap); /* однаковий відступ між усіма картками */
+  gap: var(--gap);
   padding: 0 var(--gap) var(--gap);
   background: var(--column);
   border: 1px solid var(--line);
@@ -90,14 +81,15 @@ main > section {
 #todo {
   --accent: var(--todo);
 }
+
 #in-progress {
   --accent: var(--progress);
 }
+
 #done {
   --accent: var(--done);
 }
 
-/* Заголовок колонки: кольорова смуга на всю ширину */
 main > section > h2 {
   margin: 0 calc(var(--gap) * -1);
   padding: 10px var(--gap);
@@ -106,47 +98,118 @@ main > section > h2 {
   font-size: 1rem;
   font-weight: 700;
   line-height: 1.3;
-  letter-spacing: 0.01em;
 }
 
-/* ---------- Картка ---------- */
+/* ---------- Картки задач ---------- */
 
 .card {
   padding: 10px 12px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-left: 4px solid var(--accent); /* колір статусу на картці */
+  border-left: 4px solid var(--accent);
   border-radius: 6px;
   box-shadow:
     0 1px 2px rgba(23, 33, 43, 0.12),
     0 2px 6px rgba(23, 33, 43, 0.06);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
 }
 
 .card h3 {
   margin: 0 0 4px;
-  font-size: 0.9375rem; /* 15px */
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.3;
 }
 
 .card p {
   margin: 0;
-  font-size: 0.875rem; /* 14px */
+  font-size: 0.875rem;
   line-height: 1.4;
   color: var(--ink-soft);
 }
 
-/* Виконані задачі трохи приглушені, але текст залишається читабельним */
 #done .card h3 {
   text-decoration: line-through;
   text-decoration-thickness: 1px;
   text-decoration-color: var(--ink-soft);
 }
 
-.card:focus-visible,
-.card:focus-within {
+.card:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* ---------- Форма ---------- */
+
+#task-form-section {
+  grid-column: 1 / -1;
+  --accent: var(--todo);
+}
+
+#task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#task-form label {
+  font-weight: 600;
+}
+
+#task-form input,
+#task-form select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+#task-form input:focus,
+#task-form select:focus {
+  outline: 2px solid var(--todo);
+  outline-offset: 2px;
+}
+
+#task-form button {
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  background: var(--todo);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#task-form button:hover {
+  background: #162b4d;
+}
+
+#title-error {
+  margin: 0;
+  color: #a32121;
+  font-size: 0.875rem;
+}
+
+#title-error:empty {
+  display: none;
+}
+
+/* ---------- Лічильник ---------- */
+
+#done-count {
+  margin: 0;
+  padding: 8px;
+  font-weight: 600;
+  color: var(--done);
 }
 
 /* ---------- Футер ---------- */
@@ -161,19 +224,16 @@ footer {
 footer p {
   margin: 0;
   font-size: 0.875rem;
-  color: var(--ink-soft); /* ≈ 6.2:1 на #dde3ea */
+  color: var(--ink-soft);
 }
 
-/* ==========================================================
-   Адаптивність (підлаштуйте значення під breakpoint'и
-   з практикуму 4, якщо вони інші)
-   ========================================================== */
+/* ---------- Планшет ---------- */
 
-/* Планшет */
 @media (min-width: 768px) {
   header {
-    padding: 24px 24px;
+    padding: 24px;
   }
+
   header h1 {
     font-size: 1.75rem;
   }
@@ -185,24 +245,11 @@ footer p {
   }
 }
 
-/* Десктоп */
+/* ---------- Десктоп ---------- */
+
 @media (min-width: 1200px) {
   main {
     padding: 32px 24px;
     gap: 24px;
   }
 }
-
-/* ==========================================================
-   ОБҐРУНТУВАННЯ НЕЧІТКОЇ ВИМОГИ
-   «Дошка має виглядати організованою, а не захаращеною».
-   Усі відступи між картками й колонками задані змінною --gap,
-   тому ритм дошки рівний, і око сприймає її як упорядковану
-   сітку. Типографіка карток компактна (15px/600 для заголовка,
-   14px/1.4 для опису): так на екрані вміщується більше задач,
-   а різниця у вазі й кольорі тексту відділяє заголовок від
-   опису без збільшення розміру. Картку від колонки відокремлює
-   тонка рамка з легкою тінню, а лівий кольоровий край повторює
-   колір заголовка колонки, тому статус задачі читається без
-   додаткових підписів.
-   ========================================================== */

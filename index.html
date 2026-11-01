@@ -3,84 +3,66 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kanban-дошка справ</title>
+    <title>Практична №9 — Kanban-дошка</title>
     <link rel="stylesheet" href="./css/style.css" />
     <script src="./js/app.js" defer></script>
   </head>
-
   <body>
-    <header>
-      <h1>Kanban-дошка справ</h1>
-    </header>
+    <div class="container">
+      <header>
+        <h1>Моя Kanban-дошка</h1>
+        <p>Практична робота №9 | Варіант 11</p>
+      </header>
 
-    <main>
-      <section id="task-form-section">
+      <section class="api-section">
+        <h2>Завантаження задач з API</h2>
+        <p>JSONPlaceholder — задачі користувача №3</p>
+
+        <button id="refreshBtn" type="button">Оновити задачі</button>
+
+        <p id="loading" hidden>Завантаження...</p>
+        <p id="errorMessage" class="error" role="alert" hidden></p>
+        <p id="successMessage" class="success" role="status" hidden></p>
+      </section>
+
+      <section class="form-section">
         <h2>Додати нову задачу</h2>
 
-        <form id="task-form">
-          <label for="task-title">Назва задачі</label>
+        <form id="taskForm">
           <input
             type="text"
-            id="task-title"
-            name="title"
-            placeholder="Введіть назву задачі"
+            id="taskTitle"
+            placeholder="Назва задачі"
+            minlength="3"
             required
-            pattern=".{3,}"
-            title="Мінімум 3 символи"
           />
-          <p id="title-error" aria-live="polite"></p>
 
-          <label for="task-column">Колонка</label>
-          <select id="task-column" name="column" required>
+          <select id="taskColumn">
             <option value="todo">To Do</option>
-            <option value="inprogress">In Progress</option>
+            <option value="progress">In Progress</option>
             <option value="done">Done</option>
           </select>
 
-          <button type="submit">Додати задачу</button>
+          <button type="submit">Додати</button>
         </form>
       </section>
 
-      <section id="todo">
-        <h2>To Do</h2>
-        <div id="todo-list">
-          <article class="card">
-            <h3>Підготувати звіт</h3>
-            <p>Зібрати дані та оформити звіт за минулий тиждень.</p>
-          </article>
+      <main class="board">
+        <section class="column">
+          <h2>To Do <span id="todoCount">0</span></h2>
+          <div id="todoList" class="task-list"></div>
+        </section>
 
-          <article class="card">
-            <h3>Написати листа клієнту</h3>
-            <p>Узгодити терміни виконання проєкту.</p>
-          </article>
-        </div>
-      </section>
+        <section class="column">
+          <h2>In Progress <span id="progressCount">0</span></h2>
+          <div id="progressList" class="task-list"></div>
+        </section>
 
-      <section id="in-progress">
-        <h2>In Progress</h2>
-        <div id="inprogress-list">
-          <article class="card">
-            <h3>Розробка макета сторінки</h3>
-            <p>Верстка головної сторінки застосунку.</p>
-          </article>
-        </div>
-      </section>
-
-      <section id="done">
-        <h2>Done</h2>
-        <div id="done-list">
-          <article class="card">
-            <h3>Налаштування репозиторію</h3>
-            <p>Створено проєкт і підключено Git.</p>
-          </article>
-        </div>
-
-        <p id="done-count">Виконано: 0</p>
-      </section>
-    </main>
-
-    <footer>
-      <p>Kanban-дошка справ. Дані надані навчальним прикладом. &copy; 2026</p>
-    </footer>
+        <section class="column">
+          <h2>Done <span id="doneCount">0</span></h2>
+          <div id="doneList" class="task-list"></div>
+        </section>
+      </main>
+    </div>
   </body>
 </html>

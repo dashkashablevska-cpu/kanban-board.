@@ -1,255 +1,184 @@
-:root {
-  --todo: #1f3864;
-  --progress: #8a4b00;
-  --done: #1b5e3b;
-
-  --page: #e9edf2;
-  --column: #f6f8fa;
-  --surface: #ffffff;
-  --line: #c9d1da;
-  --ink: #17212b;
-  --ink-soft: #4a5663;
-
-  --gap: 12px;
-
-  --font:
-    "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-}
-
-*,
-*::before,
-*::after {
+* {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: var(--page);
-  color: var(--ink);
-  font-family: var(--font);
-  font-size: 16px;
-  line-height: 1.5;
+  font-family: Arial, sans-serif;
+  background: #f4f6f9;
+  color: #252525;
 }
 
-/* ---------- Шапка ---------- */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
+}
 
 header {
-  background: var(--ink);
-  color: #ffffff;
-  padding: 20px 16px;
+  margin-bottom: 25px;
 }
 
 header h1 {
-  max-width: 1200px;
-  margin: 0 auto;
-  font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1.2;
+  margin-bottom: 8px;
+  font-size: 28px;
 }
 
-/* ---------- Основна дошка ---------- */
-
-main {
-  flex: 1;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 16px;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  align-items: start;
-}
-
-/* ---------- Колонки ---------- */
-
-main > section {
-  --accent: var(--todo);
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap);
-  padding: 0 var(--gap) var(--gap);
-  background: var(--column);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-#todo {
-  --accent: var(--todo);
-}
-
-#in-progress {
-  --accent: var(--progress);
-}
-
-#done {
-  --accent: var(--done);
-}
-
-main > section > h2 {
-  margin: 0 calc(var(--gap) * -1);
-  padding: 10px var(--gap);
-  background: var(--accent);
-  color: #ffffff;
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.3;
-}
-
-/* ---------- Картки задач ---------- */
-
-.card {
-  padding: 10px 12px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-left: 4px solid var(--accent);
-  border-radius: 6px;
-  box-shadow:
-    0 1px 2px rgba(23, 33, 43, 0.12),
-    0 2px 6px rgba(23, 33, 43, 0.06);
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.card:hover {
-  transform: translateY(-2px);
-}
-
-.card h3 {
-  margin: 0 0 4px;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  line-height: 1.3;
-}
-
-.card p {
+header p {
+  color: #777;
   margin: 0;
-  font-size: 0.875rem;
-  line-height: 1.4;
-  color: var(--ink-soft);
 }
 
-#done .card h3 {
-  text-decoration: line-through;
-  text-decoration-thickness: 1px;
-  text-decoration-color: var(--ink-soft);
+.api-section,
+.form-section {
+  background: white;
+  padding: 20px;
+  border: 1px solid #e2e5ea;
+  border-radius: 8px;
+  margin-bottom: 20px;
 }
 
-.card:focus-visible {
-  outline: 3px solid var(--accent);
-  outline-offset: 2px;
+h2 {
+  font-size: 18px;
+  margin-top: 0;
 }
 
-/* ---------- Форма ---------- */
-
-#task-form-section {
-  grid-column: 1 / -1;
-  --accent: var(--todo);
+.api-section p {
+  font-size: 14px;
+  color: #666;
 }
 
-#task-form {
+button {
+  background: #4776d0;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:hover {
+  background: #345fb0;
+}
+
+button:disabled {
+  background: #a6b5d0;
+  cursor: not-allowed;
+}
+
+#loading {
+  color: #4776d0;
+}
+
+#errorMessage.error {
+  color: #b52222;
+  background: #ffe9e9;
+  padding: 12px;
+  border-radius: 5px;
+}
+
+#successMessage.success {
+  color: #217a3c;
+  background: #e8f7ec;
+  padding: 12px;
+  border-radius: 5px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+form {
+  display: flex;
+  gap: 10px;
+}
+
+input,
+select {
+  padding: 10px;
+  border: 1px solid #ccd3dc;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+input {
+  flex: 1;
+  min-width: 0;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.column {
+  background: #e9edf3;
+  padding: 15px;
+  border-radius: 8px;
+  min-height: 300px;
+}
+
+.column h2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.column h2 span {
+  background: white;
+  border-radius: 5px;
+  padding: 4px 9px;
+  font-size: 13px;
+}
+
+.task-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-#task-form label {
-  font-weight: 600;
-}
-
-#task-form input,
-#task-form select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
+.task-card {
+  background: white;
+  border: 1px solid #e0e4eb;
   border-radius: 6px;
-  background: var(--surface);
-  color: var(--ink);
-  font: inherit;
-}
-
-#task-form input:focus,
-#task-form select:focus {
-  outline: 2px solid var(--todo);
-  outline-offset: 2px;
-}
-
-#task-form button {
   padding: 12px;
-  border: none;
-  border-radius: 6px;
-  background: var(--todo);
-  color: #ffffff;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
+  overflow-wrap: anywhere;
 }
 
-#task-form button:hover {
-  background: #162b4d;
+.task-card p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-#title-error {
-  margin: 0;
-  color: #a32121;
-  font-size: 0.875rem;
+.task-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-#title-error:empty {
-  display: none;
+.task-actions button {
+  padding: 7px 10px;
+  font-size: 12px;
 }
 
-/* ---------- Лічильник ---------- */
-
-#done-count {
-  margin: 0;
-  padding: 8px;
-  font-weight: 600;
-  color: var(--done);
+.delete-btn {
+  background: #d9534f;
 }
 
-/* ---------- Футер ---------- */
-
-footer {
-  padding: 16px;
-  text-align: center;
-  background: #dde3ea;
-  border-top: 1px solid var(--line);
+.delete-btn:hover {
+  background: #b83c38;
 }
 
-footer p {
-  margin: 0;
-  font-size: 0.875rem;
-  color: var(--ink-soft);
-}
-
-/* ---------- Планшет ---------- */
-
-@media (min-width: 768px) {
-  header {
-    padding: 24px;
+@media (max-width: 750px) {
+  .board {
+    grid-template-columns: 1fr;
   }
 
-  header h1 {
-    font-size: 1.75rem;
-  }
-
-  main {
-    padding: 24px;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
-  }
-}
-
-/* ---------- Десктоп ---------- */
-
-@media (min-width: 1200px) {
-  main {
-    padding: 32px 24px;
-    gap: 24px;
+  form {
+    flex-direction: column;
   }
 }

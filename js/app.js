@@ -1,197 +1,253 @@
-const tasks = [
-  {
-    id: 1,
-    title: "Підготувати звіт",
-    description: "Зібрати дані та оформити звіт за минулий тиждень.",
-    column: "todo",
-  },
-  {
-    id: 2,
-    title: "Написати листа клієнту",
-    description: "Узгодити терміни виконання проєкту.",
-    column: "todo",
-  },
-  {
-    id: 3,
-    title: "Розробка макета сторінки",
-    description: "Верстка головної сторінки застосунку.",
-    column: "inprogress",
-  },
-  {
-    id: 4,
-    title: "Налаштування репозиторію",
-    description: "Створено проєкт і підключено Git.",
-    column: "done",
-  },
-];
+"use strict";
 
-const form = document.querySelector("#task-form");
-const titleInput = document.querySelector("#task-title");
-const columnSelect = document.querySelector("#task-column");
-const titleError = document.querySelector("#title-error");
+// Практична робота №9, варіант 11
+// API: https://jsonplaceholder.typicode.com/todos?userId=3
 
-const todoList = document.querySelector("#todo-list");
-const inprogressList = document.querySelector("#inprogress-list");
-const doneList = document.querySelector("#done-list");
-const doneCount = document.querySelector("#done-count");
+const API_URL = "https://jsonplaceholder.typicode.com/todos?userId=3";
 
-let nextId = Math.max(...tasks.map((task) => task.id)) + 1;
+let tasks = [];
+let nextLocalId = 1000;
 
-// Створення HTML-картки задачі
+const refreshBtn = document.querySelector("#refreshBtn");
+const loading = document.querySelector("#loading");
+const errorMessage = document.querySelector("#errorMessage");
+const successMessage = document.querySelector("#successMessage");
+
+const taskForm = document.querySelector("#taskForm");
+const taskTitle = document.querySelector("#taskTitle");
+const taskColumn = document.querySelector("#taskColumn");
+
+const board = document.querySelector(".board");
+
+const columns = {
+  todo: document.querySelector("#todoList"),
+  progress: document.querySelector("#progressList"),
+  done: document.querySelector("#doneList"),
+};
+
+const columnOrder = ["todo", "progress", "done"];
+
+// Стан завантаження
+function showLoading(isLoading) {
+  loading.hidden = !isLoading;
+  refreshBtn.disabled = isLoading;
+}
+
+// Повідомлення
+function clearMessages() {
+  errorMessage.hidden = true;
+  successMessage.hidden = true;
+  errorMessage.textContent = "";
+  successMessage.textContent = "";
+}
+
+function showError(message) {
+  errorMessage.textContent = message;
+  errorMessage.hidden = false;
+}
+
+function showSuccess(message) {
+  successMessage.textContent = message;
+  successMessage.hidden = false;
+}
+
+// Створення кнопки для картки
+function createButton(text, action, id) {
+  const button = document.createElement("button");
+
+  button.type = "button";
+  button.textContent = text;
+  button.dataset.action = action;
+  button.dataset.id = id;
+
+  if (action === "delete") {
+    button.classList.add("delete-btn");
+  }
+
+  return button;
+}
+
+// Створення картки задачі
 function createTaskCard(task) {
-  const card = document.createElement("article");
-  card.classList.add("card");
-  card.dataset.id = task.id;
-  card.tabIndex = 0;
-  card.setAttribute("role", "button");
+  const card = document.createElement("div");
+  card.className = "task-card";
 
-  const title = document.createElement("h3");
+  const title = document.createElement("p");
   title.textContent = task.title;
 
-  card.append(title);
+  const actions = document.createElement("div");
+  actions.className = "task-actions";
 
-  if (task.description) {
-    const description = document.createElement("p");
-    description.textContent = task.description;
-    card.append(description);
+  const index = columnOrder.indexOf(task.column);
+
+  if (index > 0) {
+    actions.appendChild(createButton("← Назад", "left", task.id));
   }
 
-  if (task.column === "done") {
-    card.setAttribute("aria-label", `${task.title}, виконано`);
-  } else {
-    card.setAttribute(
-      "aria-label",
-      `${task.title}, перемістити до наступної колонки`,
-    );
+  if (index < columnOrder.length - 1) {
+    actions.appendChild(createButton("Далі →", "right", task.id));
   }
+
+  actions.appendChild(createButton("Видалити", "delete", task.id));
+
+  card.appendChild(title);
+  card.appendChild(actions);
 
   return card;
 }
 
-// Відображення задач у відповідних колонках
-function renderTasks() {
-  todoList.innerHTML = "";
-  inprogressList.innerHTML = "";
-  doneList.innerHTML = "";
+// Виведення списку задач у DOM
+function renderList() {
+  Object.values(columns).forEach((column) => {
+    column.replaceChildren();
+  });
+
+  const counts = {
+    todo: 0,
+    progress: 0,
+    done: 0,
+  };
 
   tasks.forEach((task) => {
-    const card = createTaskCard(task);
+    const column = columns[task.column];
 
-    if (task.column === "todo") {
-      todoList.append(card);
-    } else if (task.column === "inprogress") {
-      inprogressList.append(card);
-    } else if (task.column === "done") {
-      doneList.append(card);
+    if (column) {
+      column.appendChild(createTaskCard(task));
+      counts[task.column]++;
     }
   });
 
-  const completedTasks = tasks.filter((task) => task.column === "done");
+  document.querySelector("#todoCount").textContent = counts.todo;
 
-  doneCount.textContent = `Виконано: ${completedTasks.length}`;
+  document.querySelector("#progressCount").textContent = counts.progress;
+
+  document.querySelector("#doneCount").textContent = counts.done;
 }
 
-// Обробник події input: перевірка назви задачі
-titleInput.addEventListener("input", () => {
-  const title = titleInput.value.trim();
+// Отримання задач із JSONPlaceholder API
+// https://jsonplaceholder.typicode.com/todos?userId=3
+async function loadData() {
+  showLoading(true);
+  clearMessages();
 
-  if (title.length > 0 && title.length < 3) {
-    const message = "Назва задачі повинна містити мінімум 3 символи";
+  try {
+    // HTTP-запит
+    const response = await fetch(API_URL);
 
-    titleInput.setCustomValidity(message);
-    titleError.textContent = message;
-  } else {
-    titleInput.setCustomValidity("");
-    titleError.textContent = "";
+    // Перевірка HTTP-статусу
+    if (!response.ok) {
+      throw new Error(`Помилка HTTP: ${response.status}`);
+    }
+
+    // Отримання JSON
+    const data = await response.json();
+
+    console.log("Дані API:", data);
+
+    if (!Array.isArray(data)) {
+      throw new Error("Некоректна відповідь API");
+    }
+
+    if (
+      !data.every(
+        (item) =>
+          typeof item.title === "string" && typeof item.completed === "boolean",
+      )
+    ) {
+      throw new Error("Некоректні поля API");
+    }
+
+    // Перетворення задач для Kanban-дошки
+    const apiTasks = data.map((item, index) => ({
+      id: index + 1,
+      title: item.title,
+      column: item.completed ? "done" : "todo",
+      source: "api",
+    }));
+
+    // Збереження власних задач
+    const localTasks = tasks.filter((task) => task.source === "local");
+
+    tasks = [...apiTasks, ...localTasks];
+
+    // Виведення в DOM
+    renderList();
+
+    showSuccess(`Завантажено ${apiTasks.length} задач з API.`);
+  } catch (error) {
+    showError("Дошку тимчасово не вдалося завантажити");
+
+    console.error("Помилка:", error);
+  } finally {
+    showLoading(false);
   }
-});
+}
 
-// Обробник події submit: додавання нової задачі
-form.addEventListener("submit", (event) => {
+// Додавання власної задачі
+taskForm.addEventListener("submit", function (event) {
   event.preventDefault();
+  clearMessages();
 
-  const title = titleInput.value.trim();
-  const column = columnSelect.value;
+  const title = taskTitle.value.trim();
+  const column = taskColumn.value;
 
   if (title.length < 3) {
-    const message = "Назва задачі повинна містити мінімум 3 символи";
+    showError("Назва повинна містити мінімум 3 символи.");
+    return;
+  }
 
-    titleInput.setCustomValidity(message);
-    titleError.textContent = message;
-    titleInput.reportValidity();
+  if (!columns[column]) {
+    showError("Некоректна колонка.");
     return;
   }
 
   const newTask = {
-    id: nextId++,
+    id: nextLocalId++,
     title: title,
-    description: "",
     column: column,
+    source: "local",
   };
 
   tasks.push(newTask);
 
-  renderTasks();
+  renderList();
+  taskForm.reset();
 
-  form.reset();
-  titleInput.setCustomValidity("");
-  titleError.textContent = "";
+  showSuccess("Задачу додано.");
 });
 
-// Переміщення задачі до наступної колонки
-function moveTask(id) {
-  const task = tasks.find((task) => task.id === id);
+// Переміщення та видалення задач
+board.addEventListener("click", function (event) {
+  const button = event.target.closest("button[data-action]");
 
-  if (!task) {
-    return;
+  if (!button) return;
+
+  const id = Number(button.dataset.id);
+  const action = button.dataset.action;
+
+  const task = tasks.find((item) => item.id === id);
+
+  if (!task) return;
+
+  const index = columnOrder.indexOf(task.column);
+
+  if (action === "left" && index > 0) {
+    task.column = columnOrder[index - 1];
   }
 
-  if (task.column === "todo") {
-    task.column = "inprogress";
-  } else if (task.column === "inprogress") {
-    task.column = "done";
-  } else {
-    return;
+  if (action === "right" && index < 2) {
+    task.column = columnOrder[index + 1];
   }
 
-  renderTasks();
-}
-
-// Обробник події click: делегування на контейнери
-function handleTaskClick(event) {
-  const card = event.target.closest(".card");
-
-  if (!card || !event.currentTarget.contains(card)) {
-    return;
+  if (action === "delete") {
+    tasks = tasks.filter((item) => item.id !== id);
   }
 
-  const id = Number(card.dataset.id);
-  moveTask(id);
-}
-
-// Обробник клавіатури для доступності
-function handleTaskKeydown(event) {
-  if (event.key !== "Enter" && event.key !== " ") {
-    return;
-  }
-
-  const card = event.target.closest(".card");
-
-  if (!card || !event.currentTarget.contains(card)) {
-    return;
-  }
-
-  event.preventDefault();
-
-  const id = Number(card.dataset.id);
-  moveTask(id);
-}
-
-// Підключення обробників до трьох контейнерів
-[todoList, inprogressList, doneList].forEach((list) => {
-  list.addEventListener("click", handleTaskClick);
-  list.addEventListener("keydown", handleTaskKeydown);
+  renderList();
 });
 
-// Початковий рендер задач
-renderTasks();
+// Кнопка оновлення
+refreshBtn.addEventListener("click", loadData);
+
+// Початкове завантаження
+loadData();

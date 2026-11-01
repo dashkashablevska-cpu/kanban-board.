@@ -3,41 +3,51 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Практична №9 — Kanban-дошка</title>
+    <title>Практична №10 — Kanban-дошка</title>
+
     <link rel="stylesheet" href="./css/style.css" />
+
+    <!-- Vue 3 через CDN, без Node.js -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="./js/app.js" defer></script>
   </head>
   <body>
-    <div class="container">
+    <div id="app" class="container" v-cloak>
       <header>
         <h1>Моя Kanban-дошка</h1>
-        <p>Практична робота №9 | Варіант 11</p>
+        <p>Практична робота №10 | Варіант 11 | Vue 3</p>
       </header>
 
       <section class="api-section">
         <h2>Завантаження задач з API</h2>
         <p>JSONPlaceholder — задачі користувача №3</p>
 
-        <button id="refreshBtn" type="button">Оновити задачі</button>
+        <button type="button" @click="loadData" :disabled="loading">
+          {{ loading ? 'Завантаження...' : 'Оновити задачі' }}
+        </button>
 
-        <p id="loading" hidden>Завантаження...</p>
-        <p id="errorMessage" class="error" role="alert" hidden></p>
-        <p id="successMessage" class="success" role="status" hidden></p>
+        <p v-if="loading" class="loading">Завантаження...</p>
+
+        <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
+
+        <p v-if="successMessage" class="success" role="status">
+          {{ successMessage }}
+        </p>
       </section>
 
       <section class="form-section">
         <h2>Додати нову задачу</h2>
 
-        <form id="taskForm">
+        <form @submit.prevent="addTask">
           <input
             type="text"
-            id="taskTitle"
+            v-model="newTitle"
             placeholder="Назва задачі"
             minlength="3"
             required
           />
 
-          <select id="taskColumn">
+          <select v-model="newColumn">
             <option value="todo">To Do</option>
             <option value="progress">In Progress</option>
             <option value="done">Done</option>
@@ -49,20 +59,58 @@
 
       <main class="board">
         <section class="column">
-          <h2>To Do <span id="todoCount">0</span></h2>
-          <div id="todoList" class="task-list"></div>
+          <h2>
+            To Do
+            <span>{{ todoTasks.length }}</span>
+          </h2>
+
+          <task-card
+            v-for="task in todoTasks"
+            :key="task.id"
+            :id="task.id"
+            :title="task.title"
+            :column="task.column"
+            @move-next="moveNext"
+            @delete-task="deleteTask"
+          ></task-card>
         </section>
 
         <section class="column">
-          <h2>In Progress <span id="progressCount">0</span></h2>
-          <div id="progressList" class="task-list"></div>
+          <h2>
+            In Progress
+            <span>{{ progressTasks.length }}</span>
+          </h2>
+
+          <task-card
+            v-for="task in progressTasks"
+            :key="task.id"
+            :id="task.id"
+            :title="task.title"
+            :column="task.column"
+            @move-next="moveNext"
+            @delete-task="deleteTask"
+          ></task-card>
         </section>
 
         <section class="column">
-          <h2>Done <span id="doneCount">0</span></h2>
-          <div id="doneList" class="task-list"></div>
+          <h2>
+            Done
+            <span>{{ doneTasks.length }}</span>
+          </h2>
+
+          <task-card
+            v-for="task in doneTasks"
+            :key="task.id"
+            :id="task.id"
+            :title="task.title"
+            :column="task.column"
+            @move-next="moveNext"
+            @delete-task="deleteTask"
+          ></task-card>
         </section>
       </main>
+
+      <footer>Практична робота №10 — Vue 3</footer>
     </div>
   </body>
 </html>

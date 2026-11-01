@@ -2,6 +2,10 @@
   box-sizing: border-box;
 }
 
+[v-cloak] {
+  display: none;
+}
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -20,8 +24,8 @@ header {
 }
 
 header h1 {
-  margin-bottom: 8px;
   font-size: 28px;
+  margin-bottom: 8px;
 }
 
 header p {
@@ -67,26 +71,22 @@ button:disabled {
   cursor: not-allowed;
 }
 
-#loading {
-  color: #4776d0;
+.loading {
+  color: #4776d0 !important;
 }
 
-#errorMessage.error {
-  color: #b52222;
+.error {
+  color: #b52222 !important;
   background: #ffe9e9;
   padding: 12px;
   border-radius: 5px;
 }
 
-#successMessage.success {
-  color: #217a3c;
+.success {
+  color: #217a3c !important;
   background: #e8f7ec;
   padding: 12px;
   border-radius: 5px;
-}
-
-[hidden] {
-  display: none !important;
 }
 
 form {
@@ -134,43 +134,57 @@ input {
   font-size: 13px;
 }
 
-.task-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 .task-card {
   background: white;
   border: 1px solid #e0e4eb;
   border-radius: 6px;
   padding: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
   overflow-wrap: anywhere;
 }
 
+.task-card:hover {
+  border-color: #4776d0;
+  background: #fafcff;
+}
+
 .task-card p {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   font-size: 14px;
   line-height: 1.5;
 }
 
 .task-actions {
   display: flex;
-  flex-wrap: wrap;
   gap: 6px;
+  align-items: center;
 }
 
-.task-actions button {
-  padding: 7px 10px;
+.task-actions span {
+  color: #777;
   font-size: 12px;
 }
 
 .delete-btn {
   background: #d9534f;
+  padding: 7px 10px;
+  font-size: 12px;
 }
 
 .delete-btn:hover {
   background: #b83c38;
+}
+
+.done-card {
+  border-left: 4px solid #3ca66b;
+}
+
+footer {
+  text-align: center;
+  color: #888;
+  margin-top: 30px;
+  font-size: 12px;
 }
 
 @media (max-width: 750px) {

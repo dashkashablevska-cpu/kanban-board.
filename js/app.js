@@ -1,253 +1,214 @@
 "use strict";
 
-// Практична робота №9, варіант 11
+// Практична робота №10, варіант 11
+// Обрано Vue 3, оскільки він забезпечує реактивне
+// оновлення Kanban-дошки без ручної роботи з DOM.
 // API: https://jsonplaceholder.typicode.com/todos?userId=3
 
 const API_URL = "https://jsonplaceholder.typicode.com/todos?userId=3";
 
-let tasks = [];
-let nextLocalId = 1000;
+// Компонент TaskCard
+// Отримує id, title, column через props.
+// Клік по картці викликає подію move-next.
 
-const refreshBtn = document.querySelector("#refreshBtn");
-const loading = document.querySelector("#loading");
-const errorMessage = document.querySelector("#errorMessage");
-const successMessage = document.querySelector("#successMessage");
+const TaskCard = {
+  props: {
+    id: Number,
+    title: String,
+    column: String,
+  },
 
-const taskForm = document.querySelector("#taskForm");
-const taskTitle = document.querySelector("#taskTitle");
-const taskColumn = document.querySelector("#taskColumn");
+  emits: ["move-next", "delete-task"],
 
-const board = document.querySelector(".board");
+  methods: {
+    handleMove() {
+      if (this.column !== "done") {
+        this.$emit("move-next", this.id);
+      }
+    },
 
-const columns = {
-  todo: document.querySelector("#todoList"),
-  progress: document.querySelector("#progressList"),
-  done: document.querySelector("#doneList"),
+    handleDelete() {
+      this.$emit("delete-task", this.id);
+    },
+  },
+
+  template: `
+        <div
+            class="task-card"
+            :class="{ 'done-card': column === 'done' }"
+            @click="handleMove"
+        >
+            <p>{{ title }}</p>
+
+            <div class="task-actions">
+                <span v-if="column !== 'done'">
+                    Натисніть на картку →
+                </span>
+
+                <span v-else>
+                    Виконано ✓
+                </span>
+
+                <button
+                    type="button"
+                    class="delete-btn"
+                    @click.stop="handleDelete"
+                >
+                    Видалити
+                </button>
+            </div>
+        </div>
+    `,
 };
 
-const columnOrder = ["todo", "progress", "done"];
+// Головний Vue-застосунок
+Vue.createApp({
+  components: {
+    TaskCard,
+  },
 
-// Стан завантаження
-function showLoading(isLoading) {
-  loading.hidden = !isLoading;
-  refreshBtn.disabled = isLoading;
-}
+  // Реактивний стан
+  data() {
+    return {
+      tasks: [],
+      nextLocalId: 1000,
 
-// Повідомлення
-function clearMessages() {
-  errorMessage.hidden = true;
-  successMessage.hidden = true;
-  errorMessage.textContent = "";
-  successMessage.textContent = "";
-}
+      newTitle: "",
+      newColumn: "todo",
 
-function showError(message) {
-  errorMessage.textContent = message;
-  errorMessage.hidden = false;
-}
+      loading: false,
+      errorMessage: "",
+      successMessage: "",
+    };
+  },
 
-function showSuccess(message) {
-  successMessage.textContent = message;
-  successMessage.hidden = false;
-}
+  // Автоматично обчислювані списки
+  computed: {
+    todoTasks() {
+      return this.tasks.filter((task) => task.column === "todo");
+    },
 
-// Створення кнопки для картки
-function createButton(text, action, id) {
-  const button = document.createElement("button");
+    progressTasks() {
+      return this.tasks.filter((task) => task.column === "progress");
+    },
 
-  button.type = "button";
-  button.textContent = text;
-  button.dataset.action = action;
-  button.dataset.id = id;
+    doneTasks() {
+      return this.tasks.filter((task) => task.column === "done");
+    },
+  },
 
-  if (action === "delete") {
-    button.classList.add("delete-btn");
-  }
+  methods: {
+    // Завантаження задач із JSONPlaceholder
+    async loadData() {
+      if (this.loading) return;
 
-  return button;
-}
+      this.loading = true;
+      this.errorMessage = "";
+      this.successMessage = "";
 
-// Створення картки задачі
-function createTaskCard(task) {
-  const card = document.createElement("div");
-  card.className = "task-card";
+      try {
+        const response = await fetch(API_URL);
 
-  const title = document.createElement("p");
-  title.textContent = task.title;
+        if (!response.ok) {
+          throw new Error(`HTTP-помилка: ${response.status}`);
+        }
 
-  const actions = document.createElement("div");
-  actions.className = "task-actions";
+        const data = await response.json();
 
-  const index = columnOrder.indexOf(task.column);
+        console.log("Дані API:", data);
 
-  if (index > 0) {
-    actions.appendChild(createButton("← Назад", "left", task.id));
-  }
+        if (!Array.isArray(data)) {
+          throw new Error("Некоректний формат JSON");
+        }
 
-  if (index < columnOrder.length - 1) {
-    actions.appendChild(createButton("Далі →", "right", task.id));
-  }
+        const valid = data.every(
+          (item) =>
+            typeof item.id === "number" &&
+            typeof item.title === "string" &&
+            typeof item.completed === "boolean",
+        );
 
-  actions.appendChild(createButton("Видалити", "delete", task.id));
+        if (!valid) {
+          throw new Error("Некоректні поля API");
+        }
 
-  card.appendChild(title);
-  card.appendChild(actions);
+        // Перетворення JSON на задачі Kanban
+        const apiTasks = data.map((item) => ({
+          id: item.id,
+          title: item.title,
+          column: item.completed ? "done" : "todo",
+          source: "api",
+        }));
 
-  return card;
-}
+        const localTasks = this.tasks.filter((task) => task.source === "local");
 
-// Виведення списку задач у DOM
-function renderList() {
-  Object.values(columns).forEach((column) => {
-    column.replaceChildren();
-  });
+        // Оновлення реактивного масиву
+        this.tasks = [...apiTasks, ...localTasks];
 
-  const counts = {
-    todo: 0,
-    progress: 0,
-    done: 0,
-  };
+        this.successMessage = `Завантажено ${apiTasks.length} задач з API.`;
+      } catch (error) {
+        this.errorMessage = "Дошку тимчасово не вдалося завантажити";
 
-  tasks.forEach((task) => {
-    const column = columns[task.column];
+        console.error("Помилка:", error);
+      } finally {
+        this.loading = false;
+      }
+    },
 
-    if (column) {
-      column.appendChild(createTaskCard(task));
-      counts[task.column]++;
-    }
-  });
+    // Додавання власної задачі
+    addTask() {
+      this.errorMessage = "";
+      this.successMessage = "";
 
-  document.querySelector("#todoCount").textContent = counts.todo;
+      const title = this.newTitle.trim();
 
-  document.querySelector("#progressCount").textContent = counts.progress;
+      if (title.length < 3) {
+        this.errorMessage = "Назва повинна містити мінімум 3 символи.";
+        return;
+      }
 
-  document.querySelector("#doneCount").textContent = counts.done;
-}
+      this.tasks.push({
+        id: this.nextLocalId++,
+        title: title,
+        column: this.newColumn,
+        source: "local",
+      });
 
-// Отримання задач із JSONPlaceholder API
-// https://jsonplaceholder.typicode.com/todos?userId=3
-async function loadData() {
-  showLoading(true);
-  clearMessages();
+      this.newTitle = "";
+      this.newColumn = "todo";
 
-  try {
-    // HTTP-запит
-    const response = await fetch(API_URL);
+      this.successMessage = "Задачу додано.";
+    },
 
-    // Перевірка HTTP-статусу
-    if (!response.ok) {
-      throw new Error(`Помилка HTTP: ${response.status}`);
-    }
+    // Подія варіанта 11: moveNext(id)
+    // To Do → In Progress → Done
+    moveNext(id) {
+      const task = this.tasks.find((item) => item.id === id);
 
-    // Отримання JSON
-    const data = await response.json();
+      if (!task) return;
 
-    console.log("Дані API:", data);
+      if (task.column === "todo") {
+        task.column = "progress";
+      } else if (task.column === "progress") {
+        task.column = "done";
+      }
 
-    if (!Array.isArray(data)) {
-      throw new Error("Некоректна відповідь API");
-    }
+      // Vue автоматично оновлює інтерфейс.
+      // Виклик renderList() більше не потрібний.
+    },
 
-    if (
-      !data.every(
-        (item) =>
-          typeof item.title === "string" && typeof item.completed === "boolean",
-      )
-    ) {
-      throw new Error("Некоректні поля API");
-    }
+    // Видалення задачі
+    deleteTask(id) {
+      this.tasks = this.tasks.filter((task) => task.id !== id);
+    },
+  },
 
-    // Перетворення задач для Kanban-дошки
-    const apiTasks = data.map((item, index) => ({
-      id: index + 1,
-      title: item.title,
-      column: item.completed ? "done" : "todo",
-      source: "api",
-    }));
+  // Початкове завантаження
+  mounted() {
+    this.loadData();
+  },
+}).mount("#app");
 
-    // Збереження власних задач
-    const localTasks = tasks.filter((task) => task.source === "local");
-
-    tasks = [...apiTasks, ...localTasks];
-
-    // Виведення в DOM
-    renderList();
-
-    showSuccess(`Завантажено ${apiTasks.length} задач з API.`);
-  } catch (error) {
-    showError("Дошку тимчасово не вдалося завантажити");
-
-    console.error("Помилка:", error);
-  } finally {
-    showLoading(false);
-  }
-}
-
-// Додавання власної задачі
-taskForm.addEventListener("submit", function (event) {
-  event.preventDefault();
-  clearMessages();
-
-  const title = taskTitle.value.trim();
-  const column = taskColumn.value;
-
-  if (title.length < 3) {
-    showError("Назва повинна містити мінімум 3 символи.");
-    return;
-  }
-
-  if (!columns[column]) {
-    showError("Некоректна колонка.");
-    return;
-  }
-
-  const newTask = {
-    id: nextLocalId++,
-    title: title,
-    column: column,
-    source: "local",
-  };
-
-  tasks.push(newTask);
-
-  renderList();
-  taskForm.reset();
-
-  showSuccess("Задачу додано.");
-});
-
-// Переміщення та видалення задач
-board.addEventListener("click", function (event) {
-  const button = event.target.closest("button[data-action]");
-
-  if (!button) return;
-
-  const id = Number(button.dataset.id);
-  const action = button.dataset.action;
-
-  const task = tasks.find((item) => item.id === id);
-
-  if (!task) return;
-
-  const index = columnOrder.indexOf(task.column);
-
-  if (action === "left" && index > 0) {
-    task.column = columnOrder[index - 1];
-  }
-
-  if (action === "right" && index < 2) {
-    task.column = columnOrder[index + 1];
-  }
-
-  if (action === "delete") {
-    tasks = tasks.filter((item) => item.id !== id);
-  }
-
-  renderList();
-});
-
-// Кнопка оновлення
-refreshBtn.addEventListener("click", loadData);
-
-// Початкове завантаження
-loadData();
+// Ручну функцію renderList() з практикуму №7
+// замінено компонентом TaskCard та директивою v-for.
+// querySelector, createElement і innerHTML не використовуються.

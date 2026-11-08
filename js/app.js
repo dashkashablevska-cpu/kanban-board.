@@ -1,7 +1,7 @@
 "use strict";
 
-// Практична робота №12, варіант 11
-// Vue 3, localStorage, IndexedDB, CSS-анімації
+// Практична робота №13, варіант 11
+// SPA з hash-based маршрутизацією
 
 const API_URL = "https://jsonplaceholder.typicode.com/todos?userId=3";
 
@@ -16,32 +16,19 @@ const COLUMNS = ["todo", "doing", "done"];
 
 let db = null;
 
-// Збереження задач у localStorage
-function saveToLocalStorage(items) {
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(items));
-}
-
-// Завантаження задач із localStorage
+// Робота з localStorage
 function loadFromLocalStorage() {
   try {
-    const raw = localStorage.getItem(LOCAL_KEY);
-    const items = raw ? JSON.parse(raw) : [];
-
-    if (!Array.isArray(items)) {
-      throw new Error("Некоректний формат даних");
-    }
-
-    return items.filter(
-      (item) =>
-        item &&
-        (typeof item.id === "number" || typeof item.id === "string") &&
-        typeof item.title === "string" &&
-        COLUMNS.includes(item.column),
-    );
+    const data = JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]");
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error("Помилка localStorage:", error);
     return [];
   }
+}
+
+function saveToLocalStorage(items) {
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(items));
 }
 
 // Відкриття IndexedDB
@@ -59,25 +46,16 @@ function openDB() {
       }
     };
 
-    request.onsuccess = () => {
-      resolve(request.result);
-    };
-
-    request.onerror = () => {
-      reject(request.error);
-    };
-
-    request.onblocked = () => {
-      reject(new Error("База заблокована"));
-    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+    request.onblocked = () => reject(new Error("База заблокована"));
   });
 }
 
-// Додавання або оновлення задачі
-function addItem(item) {
+// CRUD-операції IndexedDB
+function putItem(item) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
-
     tx.objectStore(STORE_NAME).put(item);
 
     tx.oncomplete = () => resolve();
@@ -86,35 +64,26 @@ function addItem(item) {
   });
 }
 
-// Оновлення задачі
-function updateItem(item) {
-  return addItem(item);
-}
-
-// Отримання всіх задач
 function getAllItems() {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readonly");
-
     const request = tx.objectStore(STORE_NAME).getAll();
 
-    let result = [];
+    let items = [];
 
     request.onsuccess = () => {
-      result = request.result;
+      items = request.result;
     };
 
-    tx.oncomplete = () => resolve(result);
+    tx.oncomplete = () => resolve(items);
     tx.onerror = () => reject(tx.error);
     tx.onabort = () => reject(tx.error);
   });
 }
 
-// Видалення задачі
 function deleteItem(id) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
-
     tx.objectStore(STORE_NAME).delete(id);
 
     tx.oncomplete = () => resolve();
@@ -123,7 +92,7 @@ function deleteItem(id) {
   });
 }
 
-// Одноразова міграція localStorage -> IndexedDB
+// Одноразова міграція localStorage до IndexedDB
 async function migrateData() {
   if (localStorage.getItem(MIGRATION_KEY) === "true") {
     return;
@@ -132,90 +101,130 @@ async function migrateData() {
   const existing = await getAllItems();
   const localItems = loadFromLocalStorage();
 
-  if (existing.length === 0 && localItems.length > 0) {
+  if (existing.length === 0) {
     for (const item of localItems) {
-      await addItem(item);
+      await putItem(item);
     }
   }
 
   localStorage.setItem(MIGRATION_KEY, "true");
 }
 
-// Компонент картки задачі
+// Крок 3. Таблиця маршрутів SPA
+const routes = [
+  { path: "/", view: "home" },
+  { path: "/column/:column", view: "column" },
+  { path: "/card/:id", view: "card" },
+];
+
+// Крок 4. Пошук маршруту та отримання параметрів
+function matchRoute(path) {
+  const pathParts = path.split("/").filter(Boolean);
+
+  for (const route of routes) {
+    const routeParts = route.path.split("/").filter(Boolean);
+
+    if (routeParts.length !== pathParts.length) {
+      continue;
+    }
+
+    const params = {};
+
+    const matches = routeParts.every((part, index) => {
+      if (part.startsWith(":")) {
+        params[part.slice(1)] = pathParts[index];
+        return true;
+      }
+
+      return part === pathParts[index];
+    });
+
+    if (matches) {
+      return {
+        view: route.view,
+        params,
+      };
+    }
+  }
+
+  return null;
+}
+
+// Крок 6. Клієнтська навігація
+function navigate(path) {
+  const hash = "#" + path;
+
+  if (location.hash === hash) {
+    window.dispatchEvent(new Event("hashchange"));
+  } else {
+    location.hash = hash;
+  }
+}
+
+// Повторно використовуваний компонент картки
 const TaskCard = {
   props: {
-    id: [Number, String],
-    title: String,
-    column: String,
+    task: {
+      type: Object,
+      required: true,
+    },
     disabled: Boolean,
   },
 
   emits: ["move-next", "edit-task", "delete-task"],
 
-  methods: {
-    handleMove() {
-      if (!this.disabled && this.column !== "done") {
-        this.$emit("move-next", this.id);
-      }
-    },
-
-    handleEdit() {
-      if (!this.disabled) {
-        this.$emit("edit-task", this.id);
-      }
-    },
-
-    handleDelete() {
-      if (!this.disabled) {
-        this.$emit("delete-task", this.id);
-      }
-    },
-  },
-
   template: `
-    <div
+    <article
       class="task-card"
-      :class="{ 'done-card': column === 'done' }"
+      :class="{ 'done-card': task.column === 'done' }"
     >
-      <p>{{ title }}</p>
+      <p>
+        <a
+          class="card-title-link"
+          :href="'#/card/' + encodeURIComponent(task.id)"
+          data-link
+        >
+          {{ task.title }}
+        </a>
+      </p>
 
       <div class="task-actions">
-        <span v-if="column !== 'done'">
-          Перемістити →
-        </span>
-
-        <span v-else>
-          Виконано ✓
-        </span>
+        <a
+          class="detail-btn"
+          :href="'#/card/' + encodeURIComponent(task.id)"
+          data-link
+        >
+          Деталі
+        </a>
 
         <button
-          v-if="column !== 'done'"
+          v-if="task.column !== 'done'"
           type="button"
-          @click="handleMove"
           :disabled="disabled"
+          @click="$emit('move-next', task.id)"
         >
           →
         </button>
 
         <button
-          type="button"
           class="edit-btn"
-          @click="handleEdit"
+          type="button"
           :disabled="disabled"
+          @click="$emit('edit-task', task.id)"
         >
           Редагувати
         </button>
 
         <button
-          type="button"
           class="delete-btn"
-          @click="handleDelete"
+          type="button"
           :disabled="disabled"
+          @click="$emit('delete-task', task.id)"
         >
           Видалити
         </button>
       </div>
-    </div>
+    </article>
   `,
 };
 
@@ -228,6 +237,11 @@ Vue.createApp({
   data() {
     return {
       tasks: [],
+      columns: [
+        { id: "todo", title: "To Do" },
+        { id: "doing", title: "In Progress" },
+        { id: "done", title: "Done" },
+      ],
 
       newTitle: "",
       newColumn: "todo",
@@ -236,53 +250,145 @@ Vue.createApp({
       errorMessage: "",
       successMessage: "",
 
+      currentPath: "/",
+      currentView: "home",
+      routeParams: {},
+
       highlightedColumn: "",
       highlightTimeout: null,
     };
   },
 
   computed: {
-    todoTasks() {
-      return this.tasks.filter((task) => task.column === "todo");
-    },
-
-    doingTasks() {
-      return this.tasks.filter((task) => task.column === "doing");
-    },
-
     doneTasks() {
       return this.tasks.filter((task) => task.column === "done");
     },
 
-    // Розрахунок відсотка виконаних задач
     progressPercent() {
-      if (this.tasks.length === 0) {
-        return 0;
-      }
+      if (this.tasks.length === 0) return 0;
 
       return Math.round((this.doneTasks.length / this.tasks.length) * 100);
+    },
+
+    // Пошук конкретної задачі за параметром :id
+    selectedTask() {
+      if (this.currentView !== "card") return null;
+
+      return (
+        this.tasks.find((task) => String(task.id) === this.routeParams.id) ||
+        null
+      );
     },
   },
 
   methods: {
-    // Оновлення списку задач
+    tasksByColumn(column) {
+      return this.tasks.filter((task) => task.column === column);
+    },
+
+    columnTitle(column) {
+      const item = this.columns.find((entry) => entry.id === column);
+
+      return item ? item.title : column;
+    },
+
+    // Крок 5. View-функції для різних сторінок
+    renderHome() {
+      this.currentView = "home";
+      this.routeParams = {};
+    },
+
+    renderColumn(params) {
+      if (!COLUMNS.includes(params.column)) {
+        this.renderNotFound();
+        return;
+      }
+
+      this.currentView = "column";
+      this.routeParams = params;
+    },
+
+    renderCard(params) {
+      this.currentView = "card";
+      this.routeParams = params;
+    },
+
+    renderNotFound() {
+      this.currentView = "notFound";
+      this.routeParams = {};
+    },
+
+    // Кроки 5, 7, 9. Відображення поточного маршруту
+    renderRoute() {
+      let path;
+
+      try {
+        path = decodeURI(location.hash.slice(1) || "/");
+      } catch (error) {
+        this.renderNotFound();
+        return;
+      }
+
+      this.currentPath = path;
+
+      const match = matchRoute(path);
+
+      if (!match) {
+        this.renderNotFound();
+        return;
+      }
+
+      const views = {
+        home: () => this.renderHome(),
+        column: () => this.renderColumn(match.params),
+        card: () => this.renderCard(match.params),
+      };
+
+      views[match.view]();
+    },
+
+    // Перехоплення внутрішніх посилань
+    handleNavigation(event) {
+      const link = event.target.closest("a[data-link]");
+
+      if (
+        !link ||
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+
+      const href = link.getAttribute("href");
+      if (href && href.startsWith("#/")) {
+        navigate(href.slice(1));
+      }
+    },
+
+    // Зчитування актуальних задач
     async refreshTasks() {
       this.tasks = db ? await getAllItems() : loadFromLocalStorage();
     },
 
-    // Збереження задачі
+    // Збереження задачі в IndexedDB або localStorage
     async saveTask(task) {
       if (db) {
-        await updateItem(task);
+        await putItem(task);
       } else {
-        const updated = this.tasks.filter((item) => item.id !== task.id);
+        const items = this.tasks.filter((item) => item.id !== task.id);
 
-        updated.push(task);
-        saveToLocalStorage(updated);
+        items.push(task);
+        saveToLocalStorage(items);
       }
     },
 
-    // Підсвічування колонки призначення
+    // Підсвічування колонки з практичної №12
     highlightColumn(column) {
       clearTimeout(this.highlightTimeout);
 
@@ -297,7 +403,6 @@ Vue.createApp({
       });
     },
 
-    // Крок 8: призупинення анімації
     handleVisibilityChange() {
       document.body.classList.toggle("page-inactive", document.hidden);
     },
@@ -320,7 +425,7 @@ Vue.createApp({
         const data = await response.json();
 
         if (!Array.isArray(data)) {
-          throw new Error("Некоректний JSON");
+          throw new Error("Некоректні дані API");
         }
 
         let added = 0;
@@ -331,18 +436,17 @@ Vue.createApp({
             typeof item.title !== "string" ||
             typeof item.completed !== "boolean"
           ) {
-            throw new Error("Некоректні поля API");
+            throw new Error("Некоректні поля задачі");
           }
 
-          const exists = this.tasks.some((task) => task.id === item.id);
-
-          if (!exists) {
-            await this.saveTask({
+          if (!this.tasks.some((task) => task.id === item.id)) {
+            const task = {
               id: item.id,
               title: item.title,
               column: item.completed ? "done" : "todo",
-            });
+            };
 
+            await this.saveTask(task);
             await this.refreshTasks();
             added++;
           }
@@ -351,8 +455,7 @@ Vue.createApp({
         this.successMessage = `Завантажено ${added} нових задач з API.`;
       } catch (error) {
         console.error(error);
-
-        this.errorMessage = "Дошку тимчасово не вдалося завантажити";
+        this.errorMessage = "Дошку тимчасово не вдалося завантажити.";
       } finally {
         this.loading = false;
       }
@@ -390,14 +493,13 @@ Vue.createApp({
         this.successMessage = "Задачу додано.";
       } catch (error) {
         console.error(error);
-
-        this.errorMessage = "Помилка додавання задачі.";
+        this.errorMessage = "Помилка додавання.";
       } finally {
         this.loading = false;
       }
     },
 
-    // Переміщення задачі між колонками
+    // Переміщення задачі
     async moveNext(id) {
       if (this.loading) return;
 
@@ -416,21 +518,18 @@ Vue.createApp({
       try {
         const nextColumn = COLUMNS[index + 1];
 
-        const updated = {
+        await this.saveTask({
           ...task,
           column: nextColumn,
-        };
+        });
 
-        await this.saveTask(updated);
         await this.refreshTasks();
-
         this.highlightColumn(nextColumn);
 
         this.errorMessage = "";
         this.successMessage = "Задачу переміщено.";
       } catch (error) {
         console.error(error);
-
         this.errorMessage = "Помилка переміщення.";
       } finally {
         this.loading = false;
@@ -459,18 +558,13 @@ Vue.createApp({
       this.loading = true;
 
       try {
-        await this.saveTask({
-          ...task,
-          title,
-        });
-
+        await this.saveTask({ ...task, title });
         await this.refreshTasks();
 
         this.errorMessage = "";
         this.successMessage = "Задачу оновлено.";
       } catch (error) {
         console.error(error);
-
         this.errorMessage = "Помилка редагування.";
       } finally {
         this.loading = false;
@@ -496,18 +590,16 @@ Vue.createApp({
         this.successMessage = "Задачу видалено.";
       } catch (error) {
         console.error(error);
-
         this.errorMessage = "Помилка видалення.";
       } finally {
         this.loading = false;
       }
     },
 
-    // Ініціалізація бази даних
+    // Ініціалізація сховища даних
     async initialize() {
       this.loading = true;
-
-      let indexedDBFailed = false;
+      let failed = false;
 
       try {
         this.tasks = loadFromLocalStorage();
@@ -517,8 +609,7 @@ Vue.createApp({
         await migrateData();
         await this.refreshTasks();
       } catch (error) {
-        indexedDBFailed = true;
-
+        failed = true;
         console.error("Помилка IndexedDB:", error);
 
         if (db) {
@@ -527,31 +618,39 @@ Vue.createApp({
         }
 
         this.tasks = loadFromLocalStorage();
-
         this.errorMessage =
           "IndexedDB недоступна. Використовується localStorage.";
       } finally {
         this.loading = false;
       }
 
-      if (!indexedDBFailed && this.tasks.length === 0) {
+      if (!failed && this.tasks.length === 0) {
         await this.loadData();
       }
     },
   },
 
-  // Крок 8: запуск і відстеження активності вкладки
+  // Запуск SPA та підключення обробників
   mounted() {
-    this.initialize();
+    this.renderRoute();
+
+    window.addEventListener("hashchange", this.renderRoute);
+
+    document.addEventListener("click", this.handleNavigation);
 
     document.addEventListener("visibilitychange", this.handleVisibilityChange);
 
     this.handleVisibilityChange();
+    this.initialize();
   },
 
-  // Крок 8: очищення таймерів і обробників подій
+  // Очищення обробників і таймерів
   beforeUnmount() {
     clearTimeout(this.highlightTimeout);
+
+    window.removeEventListener("hashchange", this.renderRoute);
+
+    document.removeEventListener("click", this.handleNavigation);
 
     document.removeEventListener(
       "visibilitychange",

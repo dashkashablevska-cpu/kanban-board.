@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Особиста Kanban-дошка справ</title>
+
+    <title>Kanban SPA — Практична №13</title>
 
     <link rel="stylesheet" href="./css/style.css" />
 
@@ -15,167 +16,225 @@
     <main id="app" v-cloak>
       <header class="page-header">
         <h1>Моя Kanban-дошка</h1>
-        <p>Практична робота №12 | Варіант 11 | Vue 3</p>
+        <p>Практична робота №13 | Варіант 11 | SPA</p>
       </header>
 
-      <section class="panel">
-        <h2>Завантаження задач з API</h2>
-        <p class="description">JSONPlaceholder — задачі користувача №3</p>
-
-        <button
-          class="primary-btn"
-          type="button"
-          :disabled="loading"
-          @click="loadData"
+      <nav class="navigation" aria-label="Навігація">
+        <a href="#/" data-link :class="{ active: currentPath === '/' }">
+          Уся дошка
+        </a>
+        <a
+          href="#/column/todo"
+          data-link
+          :class="{ active: currentPath === '/column/todo' }"
         >
-          {{ loading ? "Завантаження..." : "Оновити задачі" }}
-        </button>
-
-        <div v-if="successMessage" class="message success-message">
-          {{ successMessage }}
-        </div>
-
-        <div v-if="errorMessage" class="message error-message">
-          {{ errorMessage }}
-        </div>
-      </section>
-
-      <section class="panel progress-panel">
-        <div class="progress-heading">
-          <h2>Прогрес виконання задач</h2>
-          <span>{{ progressPercent }}%</span>
-        </div>
-
-        <div
-          class="progress-track"
-          role="progressbar"
-          :aria-valuenow="progressPercent"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          aria-label="Прогрес виконання задач"
+          To Do
+        </a>
+        <a
+          href="#/column/doing"
+          data-link
+          :class="{ active: currentPath === '/column/doing' }"
         >
-          <div
-            class="progress-fill"
-            :style="{
-            transform: 'scaleX(' + progressPercent / 100 + ')'
-          }"
-          ></div>
-        </div>
-
-        <p class="progress-description">
-          Виконано {{ doneTasks.length }} із {{ tasks.length }} задач
-        </p>
-      </section>
-
-      <section class="panel">
-        <h2>Додати нову задачу</h2>
-
-        <form class="task-form" @submit.prevent="addTask">
-          <input
-            v-model="newTitle"
-            type="text"
-            placeholder="Назва задачі"
-            minlength="3"
-            required
-          />
-
-          <select v-model="newColumn">
-            <option value="todo">To Do</option>
-            <option value="doing">In Progress</option>
-            <option value="done">Done</option>
-          </select>
-
-          <button class="primary-btn" type="submit" :disabled="loading">
-            Додати
-          </button>
-        </form>
-      </section>
-
-      <section class="board">
-        <div
-          class="kanban-column"
-          :class="{
-          'column-highlight': highlightedColumn === 'todo'
-        }"
+          In Progress
+        </a>
+        <a
+          href="#/column/done"
+          data-link
+          :class="{ active: currentPath === '/column/done' }"
         >
-          <div class="column-header">
-            <h2>To Do</h2>
-            <span class="counter">{{ todoTasks.length }}</span>
-          </div>
+          Done
+        </a>
+      </nav>
 
-          <transition-group name="task" tag="div" class="task-list">
-            <task-card
-              v-for="task in todoTasks"
-              :key="task.id"
-              :id="task.id"
-              :title="task.title"
-              :column="task.column"
-              :disabled="loading"
-              @move-next="moveNext"
-              @edit-task="editTask"
-              @delete-task="deleteTask"
-            ></task-card>
-          </transition-group>
+      <div v-if="errorMessage" class="message error-message">
+        {{ errorMessage }}
+      </div>
 
-          <p v-if="todoTasks.length === 0" class="empty-text">Немає задач</p>
-        </div>
+      <div v-if="successMessage" class="message success-message">
+        {{ successMessage }}
+      </div>
 
-        <div
-          class="kanban-column"
-          :class="{
-          'column-highlight': highlightedColumn === 'doing'
-        }"
-        >
-          <div class="column-header">
-            <h2>In Progress</h2>
-            <span class="counter">{{ doingTasks.length }}</span>
-          </div>
+      <!-- Спільний контейнер сторінок SPA -->
+      <div id="page-content">
+        <!-- Головна сторінка -->
+        <template v-if="currentView === 'home'">
+          <section class="panel">
+            <h2>Завантаження задач з API</h2>
+            <p class="description">JSONPlaceholder — задачі користувача №3</p>
+            <button class="primary-btn" :disabled="loading" @click="loadData">
+              {{ loading ? 'Завантаження...' : 'Оновити задачі' }}
+            </button>
+          </section>
 
-          <transition-group name="task" tag="div" class="task-list">
-            <task-card
-              v-for="task in doingTasks"
-              :key="task.id"
-              :id="task.id"
-              :title="task.title"
-              :column="task.column"
-              :disabled="loading"
-              @move-next="moveNext"
-              @edit-task="editTask"
-              @delete-task="deleteTask"
-            ></task-card>
-          </transition-group>
+          <section class="panel">
+            <div class="progress-heading">
+              <h2>Прогрес виконання задач</h2>
+              <strong>{{ progressPercent }}%</strong>
+            </div>
+            <div
+              class="progress-track"
+              role="progressbar"
+              :aria-valuenow="progressPercent"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              <div
+                class="progress-fill"
+                :style="{ transform: 'scaleX(' + progressPercent / 100 + ')' }"
+              ></div>
+            </div>
+            <p class="description">
+              Виконано {{ doneTasks.length }} із {{ tasks.length }} задач
+            </p>
+          </section>
 
-          <p v-if="doingTasks.length === 0" class="empty-text">Немає задач</p>
-        </div>
+          <section class="panel">
+            <h2>Додати нову задачу</h2>
+            <form class="task-form" @submit.prevent="addTask">
+              <input
+                v-model="newTitle"
+                type="text"
+                placeholder="Назва задачі"
+                minlength="3"
+                required
+              />
+              <select v-model="newColumn">
+                <option value="todo">To Do</option>
+                <option value="doing">In Progress</option>
+                <option value="done">Done</option>
+              </select>
+              <button class="primary-btn" :disabled="loading">Додати</button>
+            </form>
+          </section>
 
-        <div
-          class="kanban-column"
-          :class="{
-          'column-highlight': highlightedColumn === 'done'
-        }"
-        >
-          <div class="column-header">
-            <h2>Done</h2>
-            <span class="counter">{{ doneTasks.length }}</span>
-          </div>
+          <section class="board">
+            <div
+              v-for="column in columns"
+              :key="column.id"
+              class="kanban-column"
+              :class="{ 'column-highlight': highlightedColumn === column.id }"
+            >
+              <div class="column-header">
+                <h2>
+                  <a :href="'#/column/' + column.id" data-link>
+                    {{ column.title }}
+                  </a>
+                </h2>
+                <span class="counter"
+                  >{{ tasksByColumn(column.id).length }}</span
+                >
+              </div>
 
-          <transition-group name="task" tag="div" class="task-list">
-            <task-card
-              v-for="task in doneTasks"
-              :key="task.id"
-              :id="task.id"
-              :title="task.title"
-              :column="task.column"
-              :disabled="loading"
-              @move-next="moveNext"
-              @edit-task="editTask"
-              @delete-task="deleteTask"
-            ></task-card>
-          </transition-group>
+              <transition-group name="task" tag="div" class="task-list">
+                <task-card
+                  v-for="task in tasksByColumn(column.id)"
+                  :key="task.id"
+                  :task="task"
+                  :disabled="loading"
+                  @move-next="moveNext"
+                  @edit-task="editTask"
+                  @delete-task="deleteTask"
+                ></task-card>
+              </transition-group>
 
-          <p v-if="doneTasks.length === 0" class="empty-text">Немає задач</p>
-        </div>
-      </section>
+              <p
+                v-if="tasksByColumn(column.id).length === 0"
+                class="empty-text"
+              >
+                Немає задач
+              </p>
+            </div>
+          </section>
+        </template>
+
+        <!-- Окрема колонка -->
+        <template v-else-if="currentView === 'column'">
+          <section class="panel">
+            <a href="#/" data-link class="back-link">← Уся дошка</a>
+            <h2>Колонка: {{ columnTitle(routeParams.column) }}</h2>
+            <p class="description">
+              Кількість задач: {{ tasksByColumn(routeParams.column).length }}
+            </p>
+          </section>
+
+          <section
+            class="kanban-column single-column"
+            :class="{ 'column-highlight': highlightedColumn === routeParams.column }"
+          >
+            <transition-group name="task" tag="div" class="task-list">
+              <task-card
+                v-for="task in tasksByColumn(routeParams.column)"
+                :key="task.id"
+                :task="task"
+                :disabled="loading"
+                @move-next="moveNext"
+                @edit-task="editTask"
+                @delete-task="deleteTask"
+              ></task-card>
+            </transition-group>
+            <p
+              v-if="tasksByColumn(routeParams.column).length === 0"
+              class="empty-text"
+            >
+              Немає задач
+            </p>
+          </section>
+        </template>
+
+        <!-- Деталі однієї задачі -->
+        <template v-else-if="currentView === 'card'">
+          <section class="panel detail-panel" v-if="selectedTask">
+            <a href="#/" data-link class="back-link">← Уся дошка</a>
+            <h2>Деталі задачі</h2>
+
+            <p><strong>ID:</strong> {{ selectedTask.id }}</p>
+            <p><strong>Назва:</strong> {{ selectedTask.title }}</p>
+            <p>
+              <strong>Колонка:</strong>
+              <a :href="'#/column/' + selectedTask.column" data-link>
+                {{ columnTitle(selectedTask.column) }}
+              </a>
+            </p>
+
+            <div class="detail-actions">
+              <button
+                v-if="selectedTask.column !== 'done'"
+                class="primary-btn"
+                :disabled="loading"
+                @click="moveNext(selectedTask.id)"
+              >
+                Перемістити →
+              </button>
+              <button
+                class="secondary-btn"
+                :disabled="loading"
+                @click="editTask(selectedTask.id)"
+              >
+                Редагувати
+              </button>
+              <button
+                class="danger-btn"
+                :disabled="loading"
+                @click="deleteTask(selectedTask.id)"
+              >
+                Видалити
+              </button>
+            </div>
+          </section>
+
+          <section v-else class="panel">
+            <h2>Задачу не знайдено</h2>
+            <a href="#/" data-link>Повернутися на головну</a>
+          </section>
+        </template>
+
+        <!-- Невідомий маршрут -->
+        <section v-else class="panel not-found">
+          <h2>404 — Сторінку не знайдено</h2>
+          <p>Такого маршруту не існує.</p>
+          <a href="#/" data-link class="back-link"> Повернутися на головну </a>
+        </section>
+      </div>
     </main>
   </body>
 </html>

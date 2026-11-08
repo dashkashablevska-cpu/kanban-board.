@@ -20,7 +20,7 @@ body {
 }
 
 .page-header {
-  margin-bottom: 25px;
+  margin-bottom: 24px;
 }
 
 .page-header h1 {
@@ -28,14 +28,41 @@ body {
   font-size: 30px;
 }
 
-.page-header p {
-  margin: 0;
+.page-header p,
+.description {
   color: #6b7280;
-  font-size: 15px;
+  font-size: 14px;
+}
+
+.navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.navigation a {
+  padding: 12px 17px;
+  color: #477bd9;
+  background: white;
+  border: 1px solid #dfe5ee;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.25s ease;
+}
+
+.navigation a:hover {
+  background: #e8f0ff;
+}
+
+.navigation a.active {
+  color: white;
+  background: #477bd9;
+  border-color: #477bd9;
 }
 
 .panel {
-  background: #ffffff;
+  background: white;
   padding: 24px;
   border: 1px solid #dfe5ee;
   border-radius: 10px;
@@ -47,24 +74,27 @@ body {
   font-size: 21px;
 }
 
-.description {
-  color: #6b7280;
-  margin-bottom: 15px;
+.primary-btn,
+.secondary-btn,
+.danger-btn {
+  border: none;
+  border-radius: 5px;
+  padding: 12px 16px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
 }
 
 .primary-btn {
   background: #477bd9;
-  color: white;
-  border: none;
-  padding: 13px 17px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.25s ease;
 }
 
-.primary-btn:hover {
-  background: #3466c4;
+.secondary-btn {
+  background: #71839d;
+}
+
+.danger-btn {
+  background: #e44d52;
 }
 
 button:disabled {
@@ -73,19 +103,19 @@ button:disabled {
 }
 
 .message {
-  margin-top: 16px;
   padding: 14px;
   border-radius: 5px;
+  margin-bottom: 18px;
 }
 
 .success-message {
-  background: #e3f5e8;
   color: #238247;
+  background: #e3f5e8;
 }
 
 .error-message {
-  background: #fde7e7;
   color: #bb3030;
+  background: #fde7e7;
 }
 
 .task-form {
@@ -99,7 +129,6 @@ button:disabled {
   padding: 13px;
   border: 1px solid #cbd5e1;
   border-radius: 5px;
-  font-size: 14px;
 }
 
 .task-form select {
@@ -121,10 +150,7 @@ button:disabled {
   background: #e8edf4;
   padding: 16px;
   border-radius: 10px;
-  min-height: 420px;
-  transition:
-    background-color 0.4s ease,
-    box-shadow 0.4s ease;
+  min-height: 300px;
 }
 
 .column-header {
@@ -139,12 +165,20 @@ button:disabled {
   font-size: 19px;
 }
 
+.column-header a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.column-header a:hover {
+  color: #477bd9;
+}
+
 .counter {
   background: white;
   padding: 5px 11px;
   border-radius: 5px;
   font-weight: bold;
-  font-size: 14px;
 }
 
 .task-list {
@@ -160,8 +194,7 @@ button:disabled {
   border-left: 3px solid transparent;
   transition:
     transform 0.35s ease,
-    box-shadow 0.35s ease,
-    background-color 0.35s ease;
+    box-shadow 0.35s ease;
 }
 
 .task-card:hover {
@@ -169,26 +202,30 @@ button:disabled {
   box-shadow: 0 5px 14px rgba(0, 0, 0, 0.09);
 }
 
-.task-card.done-card {
+.done-card {
   border-left-color: #31b65a;
 }
 
 .task-card p {
-  margin: 0 0 18px;
+  margin: 0 0 15px;
   line-height: 1.5;
   overflow-wrap: anywhere;
+}
+
+.card-title-link {
+  color: #17202c;
+  text-decoration: none;
+}
+
+.card-title-link:hover {
+  color: #477bd9;
+  text-decoration: underline;
 }
 
 .task-actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   gap: 8px;
-}
-
-.task-actions span {
-  font-size: 12px;
-  color: #8793a4;
 }
 
 .task-actions button {
@@ -198,13 +235,6 @@ button:disabled {
   color: white;
   cursor: pointer;
   background: #477bd9;
-  transition:
-    background-color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.task-actions button:hover {
-  transform: translateY(-2px);
 }
 
 .task-actions .edit-btn {
@@ -215,30 +245,69 @@ button:disabled {
   background: #e44d52;
 }
 
+.task-actions .detail-btn {
+  background: #e7efff;
+  color: #3565bd;
+  text-decoration: none;
+  padding: 7px 10px;
+  border-radius: 5px;
+  font-size: 13px;
+}
+
 .empty-text {
   text-align: center;
   color: #8793a4;
   margin-top: 35px;
 }
 
-/* Практична №12: анімований прогрес-бар */
+.single-column {
+  max-width: 850px;
+  margin: 0 auto;
+}
 
+.single-column .task-list {
+  gap: 14px;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 18px;
+  color: #477bd9;
+  text-decoration: none;
+}
+
+.detail-panel {
+  max-width: 850px;
+  margin: 0 auto;
+}
+
+.detail-panel p {
+  line-height: 1.8;
+}
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.not-found {
+  text-align: center;
+  padding: 50px 20px;
+}
+
+/* Анімований прогрес-бар із практичної №12 */
 .progress-heading {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 15px;
-  margin-bottom: 16px;
 }
 
-.progress-heading h2 {
-  margin: 0;
-}
-
-.progress-heading span {
+.progress-heading strong {
   color: #2f7d32;
   font-size: 23px;
-  font-weight: bold;
 }
 
 .progress-track {
@@ -252,20 +321,11 @@ button:disabled {
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, #4caf50, #2f7d32);
-  border-radius: inherit;
-  transform-origin: left center;
-  transform: scaleX(0);
+  transform-origin: left;
   transition: transform 0.6s ease;
 }
 
-.progress-description {
-  margin: 12px 0 0;
-  font-size: 14px;
-  color: #697586;
-}
-
-/* Практична №12: анімація карток */
-
+/* Анімація появи та переміщення карток */
 .task-enter-active {
   animation: task-appear 0.4s ease;
 }
@@ -274,11 +334,6 @@ button:disabled {
   transition:
     opacity 0.3s ease,
     transform 0.3s ease;
-}
-
-.task-enter-from {
-  opacity: 0;
-  transform: translateX(-35px);
 }
 
 .task-leave-to {
@@ -293,56 +348,41 @@ button:disabled {
 @keyframes task-appear {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.96);
+    transform: translateY(20px);
   }
-
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
-/* Практична №12: підсвічування колонки */
-
+/* Підсвічування колонки */
 .column-highlight {
   animation: column-flash 0.8s ease;
 }
 
 @keyframes column-flash {
-  0% {
-    background-color: #e8edf4;
-    box-shadow: inset 0 0 0 0 transparent;
-  }
-
-  40% {
-    background-color: #d8e9ff;
-    box-shadow: inset 0 0 0 3px #477bd9;
-  }
-
+  0%,
   100% {
-    background-color: #e8edf4;
-    box-shadow: inset 0 0 0 0 transparent;
+    background: #e8edf4;
+  }
+  40% {
+    background: #d8e9ff;
+    box-shadow: inset 0 0 0 3px #477bd9;
   }
 }
 
-/* Крок 8: призупинення анімацій */
+/* Призупинення анімацій у неактивній вкладці */
 .page-inactive .task-card,
-.page-inactive .task-enter-active,
-.page-inactive .task-leave-active,
 .page-inactive .column-highlight,
 .page-inactive .progress-fill {
   animation-play-state: paused !important;
   transition: none !important;
 }
 
-/* Адаптивність */
 @media (max-width: 900px) {
   .board {
     grid-template-columns: 1fr;
-  }
-
-  .kanban-column {
-    min-height: 200px;
   }
 }
 
@@ -354,20 +394,12 @@ button:disabled {
   .task-form select {
     width: 100%;
   }
-
-  .progress-heading h2 {
-    font-size: 17px;
-  }
 }
 
-/* Зменшення анімацій за налаштуваннями системи */
 @media (prefers-reduced-motion: reduce) {
-  .task-card,
-  .task-enter-active,
-  .task-leave-active,
-  .task-move,
-  .column-highlight,
-  .progress-fill {
+  *,
+  *::before,
+  *::after {
     animation: none !important;
     transition: none !important;
   }

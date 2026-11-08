@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kanban-дошка справ</title>
+    <title>Особиста Kanban-дошка справ</title>
 
     <link rel="stylesheet" href="./css/style.css" />
 
@@ -12,30 +12,68 @@
   </head>
 
   <body>
-    <main id="app" class="container">
-      <h1>Моя Kanban-дошка</h1>
-      <p class="subtitle">Практична робота №11 | Варіант 11</p>
+    <main id="app" v-cloak>
+      <header class="page-header">
+        <h1>Моя Kanban-дошка</h1>
+        <p>Практична робота №12 | Варіант 11 | Vue 3</p>
+      </header>
 
       <section class="panel">
-        <h3>Завантаження задач з API</h3>
+        <h2>Завантаження задач з API</h2>
         <p class="description">JSONPlaceholder — задачі користувача №3</p>
 
-        <button type="button" @click="loadData" :disabled="loading">
+        <button
+          class="primary-btn"
+          type="button"
+          :disabled="loading"
+          @click="loadData"
+        >
           {{ loading ? "Завантаження..." : "Оновити задачі" }}
         </button>
 
-        <p v-if="successMessage" class="success">{{ successMessage }}</p>
+        <div v-if="successMessage" class="message success-message">
+          {{ successMessage }}
+        </div>
 
-        <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+        <div v-if="errorMessage" class="message error-message">
+          {{ errorMessage }}
+        </div>
+      </section>
+
+      <section class="panel progress-panel">
+        <div class="progress-heading">
+          <h2>Прогрес виконання задач</h2>
+          <span>{{ progressPercent }}%</span>
+        </div>
+
+        <div
+          class="progress-track"
+          role="progressbar"
+          :aria-valuenow="progressPercent"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-label="Прогрес виконання задач"
+        >
+          <div
+            class="progress-fill"
+            :style="{
+            transform: 'scaleX(' + progressPercent / 100 + ')'
+          }"
+          ></div>
+        </div>
+
+        <p class="progress-description">
+          Виконано {{ doneTasks.length }} із {{ tasks.length }} задач
+        </p>
       </section>
 
       <section class="panel">
-        <h3>Додати нову задачу</h3>
+        <h2>Додати нову задачу</h2>
 
-        <form @submit.prevent="addTask" class="task-form">
+        <form class="task-form" @submit.prevent="addTask">
           <input
-            type="text"
             v-model="newTitle"
+            type="text"
             placeholder="Назва задачі"
             minlength="3"
             required
@@ -47,57 +85,95 @@
             <option value="done">Done</option>
           </select>
 
-          <button type="submit" :disabled="loading">Додати</button>
+          <button class="primary-btn" type="submit" :disabled="loading">
+            Додати
+          </button>
         </form>
       </section>
 
       <section class="board">
-        <div class="column">
-          <h3>To Do <span>{{ todoTasks.length }}</span></h3>
+        <div
+          class="kanban-column"
+          :class="{
+          'column-highlight': highlightedColumn === 'todo'
+        }"
+        >
+          <div class="column-header">
+            <h2>To Do</h2>
+            <span class="counter">{{ todoTasks.length }}</span>
+          </div>
 
-          <task-card
-            v-for="task in todoTasks"
-            :key="task.id"
-            :id="task.id"
-            :title="task.title"
-            :column="task.column"
-            :disabled="loading"
-            @move-next="moveNext"
-            @edit-task="editTask"
-            @delete-task="deleteTask"
-          ></task-card>
+          <transition-group name="task" tag="div" class="task-list">
+            <task-card
+              v-for="task in todoTasks"
+              :key="task.id"
+              :id="task.id"
+              :title="task.title"
+              :column="task.column"
+              :disabled="loading"
+              @move-next="moveNext"
+              @edit-task="editTask"
+              @delete-task="deleteTask"
+            ></task-card>
+          </transition-group>
+
+          <p v-if="todoTasks.length === 0" class="empty-text">Немає задач</p>
         </div>
 
-        <div class="column">
-          <h3>In Progress <span>{{ doingTasks.length }}</span></h3>
+        <div
+          class="kanban-column"
+          :class="{
+          'column-highlight': highlightedColumn === 'doing'
+        }"
+        >
+          <div class="column-header">
+            <h2>In Progress</h2>
+            <span class="counter">{{ doingTasks.length }}</span>
+          </div>
 
-          <task-card
-            v-for="task in doingTasks"
-            :key="task.id"
-            :id="task.id"
-            :title="task.title"
-            :column="task.column"
-            :disabled="loading"
-            @move-next="moveNext"
-            @edit-task="editTask"
-            @delete-task="deleteTask"
-          ></task-card>
+          <transition-group name="task" tag="div" class="task-list">
+            <task-card
+              v-for="task in doingTasks"
+              :key="task.id"
+              :id="task.id"
+              :title="task.title"
+              :column="task.column"
+              :disabled="loading"
+              @move-next="moveNext"
+              @edit-task="editTask"
+              @delete-task="deleteTask"
+            ></task-card>
+          </transition-group>
+
+          <p v-if="doingTasks.length === 0" class="empty-text">Немає задач</p>
         </div>
 
-        <div class="column">
-          <h3>Done <span>{{ doneTasks.length }}</span></h3>
+        <div
+          class="kanban-column"
+          :class="{
+          'column-highlight': highlightedColumn === 'done'
+        }"
+        >
+          <div class="column-header">
+            <h2>Done</h2>
+            <span class="counter">{{ doneTasks.length }}</span>
+          </div>
 
-          <task-card
-            v-for="task in doneTasks"
-            :key="task.id"
-            :id="task.id"
-            :title="task.title"
-            :column="task.column"
-            :disabled="loading"
-            @move-next="moveNext"
-            @edit-task="editTask"
-            @delete-task="deleteTask"
-          ></task-card>
+          <transition-group name="task" tag="div" class="task-list">
+            <task-card
+              v-for="task in doneTasks"
+              :key="task.id"
+              :id="task.id"
+              :title="task.title"
+              :column="task.column"
+              :disabled="loading"
+              @move-next="moveNext"
+              @edit-task="editTask"
+              @delete-task="deleteTask"
+            ></task-card>
+          </transition-group>
+
+          <p v-if="doneTasks.length === 0" class="empty-text">Немає задач</p>
         </div>
       </section>
     </main>

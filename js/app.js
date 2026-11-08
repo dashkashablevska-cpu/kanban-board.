@@ -1,7 +1,7 @@
 "use strict";
 
-// Практична робота №11, варіант 11
-// Kanban-дошка: Vue 3, localStorage, IndexedDB
+// Практична робота №12, варіант 11
+// Vue 3, localStorage, IndexedDB, CSS-анімації
 
 const API_URL = "https://jsonplaceholder.typicode.com/todos?userId=3";
 
@@ -44,7 +44,7 @@ function loadFromLocalStorage() {
   }
 }
 
-// Відкриття бази IndexedDB
+// Відкриття IndexedDB
 function openDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -59,13 +59,21 @@ function openDB() {
       }
     };
 
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-    request.onblocked = () => reject(new Error("База заблокована"));
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+
+    request.onerror = () => {
+      reject(request.error);
+    };
+
+    request.onblocked = () => {
+      reject(new Error("База заблокована"));
+    };
   });
 }
 
-// Додавання задачі в IndexedDB
+// Додавання або оновлення задачі
 function addItem(item) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
@@ -78,15 +86,16 @@ function addItem(item) {
   });
 }
 
-// Оновлення задачі в IndexedDB
+// Оновлення задачі
 function updateItem(item) {
   return addItem(item);
 }
 
-// Отримання всіх задач з IndexedDB
+// Отримання всіх задач
 function getAllItems() {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readonly");
+
     const request = tx.objectStore(STORE_NAME).getAll();
 
     let result = [];
@@ -101,7 +110,7 @@ function getAllItems() {
   });
 }
 
-// Видалення задачі з IndexedDB
+// Видалення задачі
 function deleteItem(id) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
@@ -114,7 +123,7 @@ function deleteItem(id) {
   });
 }
 
-// Одноразова міграція з localStorage до IndexedDB
+// Одноразова міграція localStorage -> IndexedDB
 async function migrateData() {
   if (localStorage.getItem(MIGRATION_KEY) === "true") {
     return;
@@ -164,9 +173,10 @@ const TaskCard = {
   },
 
   template: `
-    <div class="task-card"
-         :class="{ 'done-card': column === 'done' }">
-
+    <div
+      class="task-card"
+      :class="{ 'done-card': column === 'done' }"
+    >
       <p>{{ title }}</p>
 
       <div class="task-actions">
@@ -218,12 +228,16 @@ Vue.createApp({
   data() {
     return {
       tasks: [],
+
       newTitle: "",
       newColumn: "todo",
 
       loading: false,
       errorMessage: "",
       successMessage: "",
+
+      highlightedColumn: "",
+      highlightTimeout: null,
     };
   },
 
@@ -238,6 +252,15 @@ Vue.createApp({
 
     doneTasks() {
       return this.tasks.filter((task) => task.column === "done");
+    },
+
+    // Розрахунок відсотка виконаних задач
+    progressPercent() {
+      if (this.tasks.length === 0) {
+        return 0;
+      }
+
+      return Math.round((this.doneTasks.length / this.tasks.length) * 100);
     },
   },
 
@@ -259,7 +282,27 @@ Vue.createApp({
       }
     },
 
-    // Завантаження задач із API
+    // Підсвічування колонки призначення
+    highlightColumn(column) {
+      clearTimeout(this.highlightTimeout);
+
+      this.highlightedColumn = "";
+
+      this.$nextTick(() => {
+        this.highlightedColumn = column;
+
+        this.highlightTimeout = setTimeout(() => {
+          this.highlightedColumn = "";
+        }, 800);
+      });
+    },
+
+    // Крок 8: призупинення анімації
+    handleVisibilityChange() {
+      document.body.classList.toggle("page-inactive", document.hidden);
+    },
+
+    // Завантаження задач із JSONPlaceholder
     async loadData() {
       if (this.loading) return;
 
@@ -308,13 +351,14 @@ Vue.createApp({
         this.successMessage = `Завантажено ${added} нових задач з API.`;
       } catch (error) {
         console.error(error);
+
         this.errorMessage = "Дошку тимчасово не вдалося завантажити";
       } finally {
         this.loading = false;
       }
     },
 
-    // Додавання нової задачі
+    // Додавання задачі
     async addTask() {
       if (this.loading) return;
 
@@ -337,19 +381,23 @@ Vue.createApp({
         await this.saveTask(task);
         await this.refreshTasks();
 
+        this.highlightColumn(task.column);
+
         this.newTitle = "";
         this.newColumn = "todo";
+
         this.errorMessage = "";
         this.successMessage = "Задачу додано.";
       } catch (error) {
         console.error(error);
+
         this.errorMessage = "Помилка додавання задачі.";
       } finally {
         this.loading = false;
       }
     },
 
-    // Переміщення задачі
+    // Переміщення задачі між колонками
     async moveNext(id) {
       if (this.loading) return;
 
@@ -366,18 +414,23 @@ Vue.createApp({
       this.loading = true;
 
       try {
+        const nextColumn = COLUMNS[index + 1];
+
         const updated = {
           ...task,
-          column: COLUMNS[index + 1],
+          column: nextColumn,
         };
 
         await this.saveTask(updated);
         await this.refreshTasks();
 
+        this.highlightColumn(nextColumn);
+
         this.errorMessage = "";
         this.successMessage = "Задачу переміщено.";
       } catch (error) {
         console.error(error);
+
         this.errorMessage = "Помилка переміщення.";
       } finally {
         this.loading = false;
@@ -406,13 +459,18 @@ Vue.createApp({
       this.loading = true;
 
       try {
-        await this.saveTask({ ...task, title });
+        await this.saveTask({
+          ...task,
+          title,
+        });
+
         await this.refreshTasks();
 
         this.errorMessage = "";
         this.successMessage = "Задачу оновлено.";
       } catch (error) {
         console.error(error);
+
         this.errorMessage = "Помилка редагування.";
       } finally {
         this.loading = false;
@@ -438,23 +496,29 @@ Vue.createApp({
         this.successMessage = "Задачу видалено.";
       } catch (error) {
         console.error(error);
+
         this.errorMessage = "Помилка видалення.";
       } finally {
         this.loading = false;
       }
     },
 
-    // Ініціалізація бази та обробка помилок
+    // Ініціалізація бази даних
     async initialize() {
       this.loading = true;
+
+      let indexedDBFailed = false;
 
       try {
         this.tasks = loadFromLocalStorage();
 
         db = await openDB();
+
         await migrateData();
         await this.refreshTasks();
       } catch (error) {
+        indexedDBFailed = true;
+
         console.error("Помилка IndexedDB:", error);
 
         if (db) {
@@ -463,19 +527,42 @@ Vue.createApp({
         }
 
         this.tasks = loadFromLocalStorage();
+
         this.errorMessage =
           "IndexedDB недоступна. Використовується localStorage.";
       } finally {
         this.loading = false;
       }
 
-      if (this.tasks.length === 0) {
+      if (!indexedDBFailed && this.tasks.length === 0) {
         await this.loadData();
       }
     },
   },
 
+  // Крок 8: запуск і відстеження активності вкладки
   mounted() {
     this.initialize();
+
+    document.addEventListener("visibilitychange", this.handleVisibilityChange);
+
+    this.handleVisibilityChange();
+  },
+
+  // Крок 8: очищення таймерів і обробників подій
+  beforeUnmount() {
+    clearTimeout(this.highlightTimeout);
+
+    document.removeEventListener(
+      "visibilitychange",
+      this.handleVisibilityChange,
+    );
+
+    document.body.classList.remove("page-inactive");
+
+    if (db) {
+      db.close();
+      db = null;
+    }
   },
 }).mount("#app");

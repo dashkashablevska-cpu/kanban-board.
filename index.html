@@ -3,42 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Практична №10 — Kanban-дошка</title>
+    <title>Kanban-дошка справ</title>
 
     <link rel="stylesheet" href="./css/style.css" />
 
-    <!-- Vue 3 через CDN, без Node.js -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="./js/app.js" defer></script>
   </head>
-  <body>
-    <div id="app" class="container" v-cloak>
-      <header>
-        <h1>Моя Kanban-дошка</h1>
-        <p>Практична робота №10 | Варіант 11 | Vue 3</p>
-      </header>
 
-      <section class="api-section">
-        <h2>Завантаження задач з API</h2>
-        <p>JSONPlaceholder — задачі користувача №3</p>
+  <body>
+    <main id="app" class="container">
+      <h1>Моя Kanban-дошка</h1>
+      <p class="subtitle">Практична робота №11 | Варіант 11</p>
+
+      <section class="panel">
+        <h3>Завантаження задач з API</h3>
+        <p class="description">JSONPlaceholder — задачі користувача №3</p>
 
         <button type="button" @click="loadData" :disabled="loading">
-          {{ loading ? 'Завантаження...' : 'Оновити задачі' }}
+          {{ loading ? "Завантаження..." : "Оновити задачі" }}
         </button>
 
-        <p v-if="loading" class="loading">Завантаження...</p>
+        <p v-if="successMessage" class="success">{{ successMessage }}</p>
 
-        <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
-
-        <p v-if="successMessage" class="success" role="status">
-          {{ successMessage }}
-        </p>
+        <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
       </section>
 
-      <section class="form-section">
-        <h2>Додати нову задачу</h2>
+      <section class="panel">
+        <h3>Додати нову задачу</h3>
 
-        <form @submit.prevent="addTask">
+        <form @submit.prevent="addTask" class="task-form">
           <input
             type="text"
             v-model="newTitle"
@@ -49,20 +43,17 @@
 
           <select v-model="newColumn">
             <option value="todo">To Do</option>
-            <option value="progress">In Progress</option>
+            <option value="doing">In Progress</option>
             <option value="done">Done</option>
           </select>
 
-          <button type="submit">Додати</button>
+          <button type="submit" :disabled="loading">Додати</button>
         </form>
       </section>
 
-      <main class="board">
-        <section class="column">
-          <h2>
-            To Do
-            <span>{{ todoTasks.length }}</span>
-          </h2>
+      <section class="board">
+        <div class="column">
+          <h3>To Do <span>{{ todoTasks.length }}</span></h3>
 
           <task-card
             v-for="task in todoTasks"
@@ -70,33 +61,31 @@
             :id="task.id"
             :title="task.title"
             :column="task.column"
+            :disabled="loading"
             @move-next="moveNext"
+            @edit-task="editTask"
             @delete-task="deleteTask"
           ></task-card>
-        </section>
+        </div>
 
-        <section class="column">
-          <h2>
-            In Progress
-            <span>{{ progressTasks.length }}</span>
-          </h2>
+        <div class="column">
+          <h3>In Progress <span>{{ doingTasks.length }}</span></h3>
 
           <task-card
-            v-for="task in progressTasks"
+            v-for="task in doingTasks"
             :key="task.id"
             :id="task.id"
             :title="task.title"
             :column="task.column"
+            :disabled="loading"
             @move-next="moveNext"
+            @edit-task="editTask"
             @delete-task="deleteTask"
           ></task-card>
-        </section>
+        </div>
 
-        <section class="column">
-          <h2>
-            Done
-            <span>{{ doneTasks.length }}</span>
-          </h2>
+        <div class="column">
+          <h3>Done <span>{{ doneTasks.length }}</span></h3>
 
           <task-card
             v-for="task in doneTasks"
@@ -104,13 +93,13 @@
             :id="task.id"
             :title="task.title"
             :column="task.column"
+            :disabled="loading"
             @move-next="moveNext"
+            @edit-task="editTask"
             @delete-task="deleteTask"
           ></task-card>
-        </section>
-      </main>
-
-      <footer>Практична робота №10 — Vue 3</footer>
-    </div>
+        </div>
+      </section>
+    </main>
   </body>
 </html>

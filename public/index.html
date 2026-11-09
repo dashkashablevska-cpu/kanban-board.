@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Kanban SPA — Практична №13</title>
+    <title>Kanban — Практична №14</title>
 
     <link rel="stylesheet" href="./css/style.css" />
 
@@ -16,7 +16,7 @@
     <main id="app" v-cloak>
       <header class="page-header">
         <h1>Моя Kanban-дошка</h1>
-        <p>Практична робота №13 | Варіант 11 | SPA</p>
+        <p>Практична робота №14 | Варіант 11</p>
       </header>
 
       <nav class="navigation" aria-label="Навігація">
@@ -60,7 +60,7 @@
         <template v-if="currentView === 'home'">
           <section class="panel">
             <h2>Завантаження задач з API</h2>
-            <p class="description">JSONPlaceholder — задачі користувача №3</p>
+            <p class="description">Локальний сервер Node.js — GET /api/tasks</p>
             <button class="primary-btn" :disabled="loading" @click="loadData">
               {{ loading ? 'Завантаження...' : 'Оновити задачі' }}
             </button>

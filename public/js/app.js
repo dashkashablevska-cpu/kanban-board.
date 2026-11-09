@@ -3,7 +3,7 @@
 // Практична робота №13, варіант 11
 // SPA з hash-based маршрутизацією
 
-const API_URL = "https://jsonplaceholder.typicode.com/todos?userId=3";
+const API_URL = "/api/tasks";
 
 const DB_NAME = "KanbanDB";
 const DB_VERSION = 1;
@@ -434,7 +434,7 @@ Vue.createApp({
           if (
             typeof item.id !== "number" ||
             typeof item.title !== "string" ||
-            typeof item.completed !== "boolean"
+            !COLUMNS.includes(item.column)
           ) {
             throw new Error("Некоректні поля задачі");
           }
@@ -443,7 +443,7 @@ Vue.createApp({
             const task = {
               id: item.id,
               title: item.title,
-              column: item.completed ? "done" : "todo",
+              column: item.column,
             };
 
             await this.saveTask(task);
@@ -452,7 +452,7 @@ Vue.createApp({
           }
         }
 
-        this.successMessage = `Завантажено ${added} нових задач з API.`;
+        this.successMessage = `Завантажено ${added} нових задач з локального API.`;
       } catch (error) {
         console.error(error);
         this.errorMessage = "Дошку тимчасово не вдалося завантажити.";

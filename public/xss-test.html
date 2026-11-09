@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Практична №15 — Перевірка XSS</title>
+  </head>
+  <body>
+    <h2>Перевірка відображення назви задачі</h2>
+
+    <h3>До виправлення (innerHTML)</h3>
+    <div id="unsafe"></div>
+
+    <h3>Після виправлення (textContent)</h3>
+    <div id="safe"></div>
+
+    <script>
+      const title = "<b>Тестова задача</b>";
+
+      // Небезпечний спосіб
+      document.getElementById("unsafe").innerHTML = title;
+
+      // Безпечний спосіб
+      document.getElementById("safe").textContent = title;
+    </script>
+  </body>
+</html>
